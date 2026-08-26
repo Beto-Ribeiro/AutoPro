@@ -1,10 +1,44 @@
-import { Fragment } from "react";
-
-const Header =() => {
+import React from "react";
+import { Container, Logo, Menu , Menu2, SearchContainer,} from "./style";
+import { FiSearch, FiShoppingCart} from "react-icons/fi";
+const Header = () =>{
 
     return (
-        <Fragment>
-            <h2> AutoPro</h2>
-        </Fragment>
+        <Container>
+            <Logo> 
+                
+                <b> AutoPro</b>
+                
+            </Logo>
+            <Menu2> 
+                <ul>
+                <li> Blankes </li>
+                <li> Engines </li>
+                <li> Suspension </li>
+                <li> Oil </li>
+                </ul>
+            </Menu2>
+           
+                
+            <Menu>
+                <ul>
+                <SearchContainer>
+
+                  <FiSearch className="search-icon" />
+                <input type="text" placeholder="Buscar peças..." />
+            </SearchContainer>
+                    
+                    <li> Login</li>
+                        <li className="cart-item">
+                             <FiShoppingCart/>
+
+
+                        </li>
+                  
+                </ul>
+            </Menu>
+        </Container>
     )
+    
 }
+export default Header;
