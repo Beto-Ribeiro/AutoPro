@@ -14,6 +14,7 @@ export const Container = styled.div`
   margin-left:20px;
   margin-right:15px;
   margin-top:10px;
+  margin-bottom:20px;
 
   &::before {
     content: '';
