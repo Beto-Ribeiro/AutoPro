@@ -1,6 +1,7 @@
 import React, { Fragment }from "react";
 import {Header, Wrapper} from "./style";
 import Card from "../../components/card";
+import Categoriacard from "../../components/categoria card";
 
 
 const Home = () => {
@@ -8,39 +9,44 @@ const Home = () => {
     return (
         <Fragment>
             <Header>
-                <h2> Lorem ipsum dolor sit amet </h2>
+                <h2> Categorias </h2>
             </Header>
             <Wrapper>
-                <Card
-                    imagem="https://cdn-icons-png.flaticon.com/512/1830/1830989.png"
-                    titulo= "Matemática"
-                    mes="Agosto a Novembro"
-                    aulas="20 aulas"
-                
-                />
-                <Card
-                    imagem="https://cdn-icons-png.flaticon.com/512/1994/1994339.png"
-                    titulo= "Português"
-                    mes="Agosto a Novembro"
-                    aulas="20 aulas"
-                
-                 />
-                  <Card
-                    imagem="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRPrVWT_dH4xTPao52QApjkEP3J5R25Wc9tSaChA3pHaIg4UlLjzBiZJ4&s=10"
-                    titulo= "História"
-                    mes="Agosto a Novembro"
-                    aulas="10 aulas"
-                
-                 />
-                  <Card
-                    imagem="https://static.vecteezy.com/ti/vetor-gratis/p1/6637178-ciencia-elemento-fundo-colecao-de-colorido-elemento-ciencia-ilustracao-conjunto-de-biologia-elemento-icone-design-gratis-vetor.jpg"
-                    titulo= "Ciências"
-                    mes="Agosto a Novembro"
-                    aulas="10 aulas"
-                
-                 />
+               
+                 <Categoriacard
+                    imagem="https://static.vecteezy.com/system/resources/thumbnails/077/944/322/small/close-up-of-a-car-s-mechanical-transmission-system-gears-intricately-designed-for-automotive-power-transfer-free-png.png"
+                    titulo="Transmissão"
                  
-            </Wrapper>
+                 />
+                  <Categoriacard
+                    imagem="https://contagemmotorpecas.com.br/wp-content/uploads/2019/02/Confira-os-principais-componentes-do-motor-de-um-carro.jpg"
+                    titulo="Motor"
+                 
+                 
+                 
+                 />
+                  <Categoriacard
+                    imagem="https://static.kbb.com.br/Uploads/ResearchTools/News/1259/f09e7fbd-fa1f-4415-a69b-faadd4b32877_1365x1024.jpg"
+                    titulo="Suspensão"
+                 
+                 
+                 
+                 />
+                   <Categoriacard
+                    imagem="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbIptHLqN9MPt2w3vxmhWuzPjy3A8nn8nSjyP65w5Gfw&s=10"
+                    titulo="Pneus"
+                 
+                 
+                 
+                 />
+                   <Categoriacard
+                    imagem="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSodfIhPOttT2NfEIJB6uFO7YFSeW5fyV7slYQRxEpeed_HTAs1Mki-jHU&s=10"
+                    titulo="Freios"
+                 
+                 
+                 
+                 />
+             </Wrapper>
 
         </Fragment>
     )
