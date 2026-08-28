@@ -33,8 +33,9 @@ const Header = () =>{
                     
                         <li className="cart-item">
                              <FiShoppingCart/>
-
-
+                        </li>
+                        <li style={{ cursor: 'pointer', marginLeft: '16px', fontWeight: 'bold', color: 'var(--primary)' }} onClick={() => navigate('/profile')}>
+                             Perfil
                         </li>
                   
                 </ul>
