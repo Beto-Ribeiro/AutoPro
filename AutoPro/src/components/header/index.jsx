@@ -1,9 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Container, Logo, Menu , Menu2, SearchContainer,} from "./style";
 import { FiSearch, FiShoppingCart} from "react-icons/fi";
 const Header = () =>{
+  const navigate = useNavigate();
 
-    return (
+  return (
         <Container>
             <Logo> 
                 
@@ -28,7 +30,7 @@ const Header = () =>{
                 <input type="text" placeholder="Buscar peças..." />
             </SearchContainer>
                     
-                    <li> Login</li>
+                    <li onClick={() => navigate('/login')} style={{cursor:'pointer'}}> Login</li>
                         <li className="cart-item">
                              <FiShoppingCart/>
 

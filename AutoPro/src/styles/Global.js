@@ -8,6 +8,10 @@ export default createGlobalStyle`
 
     }
 
+    html, body, #root {
+        height: 100%;
+    }
+
     :root{
     --primary: #DC2626;
     --secondary: #0F172A;
@@ -17,11 +21,11 @@ export default createGlobalStyle`
 
 }
     body{
-        background-color: var (--primary);
+        background-color: var(--white);
         color: var(--secondary);
-        font-size: 1.2rem;
+        font-size: 1rem;
         font-family: "Inter", sans-serif;
-        font-weight:400;
+        font-weight: 400;
         
     }
     ul{list-style:none;}
