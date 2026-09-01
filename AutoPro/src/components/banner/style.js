@@ -1,67 +1,73 @@
 import styled from "styled-components";
 
-export const Container = styled.div`
-  padding: 60px 80px;
-  height: 480px;
+export const BannerSection = styled.section`
   position: relative;
-  background-size: cover;
-  background-position: center;
-  background-image: url(https://img.magnific.com/fotos-gratis/tema-de-reparacao-e-manutencao-de-automoveis-motor-de-capo-aberto-de-carro-em-servico-automatico_627829-3968.jpg);
-  display: flex;
-  align-items: center;
-  border-radius: 8px;
+  width: 100%;
+  height: 400px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  margin-left:20px;
-  margin-right:15px;
-  margin-top:10px;
-  margin-bottom:20px;
+  background-color: var(--surface-container-highest);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--outline-variant);
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
-    z-index: 1;
+  @media (min-width: 768px) {
+    height: 500px;
   }
 `;
 
-export const Text = styled.div`
-  width: 45%;
-  position: relative;
-  z-index: 2;
+export const BannerImage = styled.div`
+  position: absolute;
+  inset: 0;
+  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA66M1R2FuaGjKqCFiPzEayXTEiz9WyvCZsJPsnQQSJH9mRkRcTUoOfQDyyS-7X_Ploml7lD1PEjRJUSvVT2Qjp3_b2wHyBnmFmdPdArbvjLpxgN9x-khqMkwVCFq3bpLuzhbvw75E05eRua4Levk0ssJJyxYa-LGXW-Ezww5qrS7w-KoO8y4FgPDpOaDnjJUqTCa3k0jkBLY3DFfg5e70Rt7Z5r3a_RmO5n9nKFJ-IYDOqNprTZNM');
+  background-size: cover;
+  background-position: center;
+`;
 
-  h2 {
-    color: #ffffff;
-    font-size: 48px;
+export const BannerOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(92,64,60,0.90) 0%, transparent 70%);
+  display: flex;
+  align-items: center;
+  padding: var(--gutter);
+
+  @media (min-width: 768px) {
+    padding: var(--margin-desktop);
+  }
+`;
+
+export const BannerContent = styled.div`
+  max-width: 560px;
+  color: #ffffff;
+
+  h1 {
+    font-size: clamp(1.5rem, 4vw, 3rem);
     font-weight: 700;
-    margin-bottom: 20px;
-    line-height: 1.2;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: #ffffff;
+    margin-bottom: var(--stack-md);
   }
 
   p {
-    color: #e5e5e5;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.5;
-    margin-bottom: 40px;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--surface-container-low);
+    margin-bottom: var(--stack-lg);
   }
+`;
 
-  span {
-    background-color: #c90014;
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 700;
-    padding: 12px 24px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: inline-block;
-    transition: background-color 0.2s ease;
+export const BannerCta = styled.button`
+  background-color: var(--primary);
+  color: var(--on-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s, transform 0.1s;
 
-    &:hover {
-      background-color: #a00010;
-    }
-  }
+  &:hover  { background-color: var(--primary-container); }
+  &:active { transform: scale(0.97); }
 `;

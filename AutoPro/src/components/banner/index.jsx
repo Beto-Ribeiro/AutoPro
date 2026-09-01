@@ -1,19 +1,19 @@
 import React from "react";
-import {Container, Text} from "./style";
+import { BannerSection, BannerImage, BannerOverlay, BannerContent, BannerCta } from "./style";
 
 const Banner = () => {
+  return (
+    <BannerSection>
+      <BannerImage />
+      <BannerOverlay>
+        <BannerContent>
+          <h1>Ofertas de Alta Performance</h1>
+          <p>Encontre as melhores peças para o seu veículo com descontos imperdíveis.</p>
+          <BannerCta>Ver Ofertas</BannerCta>
+        </BannerContent>
+      </BannerOverlay>
+    </BannerSection>
+  );
+};
 
-    return(
-        <Container>
-
-                <Text>
-                    <h2> Ofertas de alta performance!</h2>
-                    <p> Encontre as melhores ofertas para seu veículo com descontos imperdíveis </p>
-                    <span> Ver ofertas</span>
-
-                </Text>
-
-        </Container>
-    )
-}
 export default Banner;

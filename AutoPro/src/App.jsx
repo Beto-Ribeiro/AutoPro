@@ -1,21 +1,23 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
+import { CartProvider } from './context/CartContext';
 import Header from './components/header';
-import Global from './styles/Global';
-import Banner from './components/banner';
-import Home from './pages/Home';
 import Rodape from './components/rodape';
+import Global from './styles/Global';
+import Home from './pages/Home';
+import Cart from './pages/Cart';
+import Address from './pages/Address';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 
-/* ── Main app shell (header + banner + home + footer) ── */
-const MainLayout = () => (
-  <div>
+/* ─── Layouts ─────────────────────────────────────────────────── */
+
+const MainLayout = ({ children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
     <Header />
-    <Banner />
-    <Home />
+    {children}
     <Rodape />
   </div>
 );
@@ -30,28 +32,83 @@ function App() {
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => setSession(session)
+    );
     return () => subscription.unsubscribe();
   }, []);
 
   if (loading) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Carregando...</div>;
+    return (
+      <div
+        style={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'Inter, sans-serif',
+          color: 'var(--secondary)',
+        }}
+      >
+        Carregando...
+      </div>
+    );
   }
 
   return (
     <BrowserRouter>
       <Global />
-      <Routes>
-        <Route path="/login"    element={session ? <Navigate to="/" /> : <Login />} />
-        <Route path="/register" element={session ? <Navigate to="/" /> : <Register />} />
-        <Route path="/profile"  element={session ? <Profile /> : <Navigate to="/login" />} />
-        <Route path="/*"        element={session ? <MainLayout /> : <Navigate to="/login" />} />
-      </Routes>
+      {/* CartProvider wraps everything so any component can useCart() */}
+      <CartProvider>
+        <Routes>
+          {/* ── Rotas públicas ── */}
+          <Route
+            path="/"
+            element={
+              <MainLayout>
+                <Home />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <MainLayout>
+                <Cart />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/login"
+            element={session ? <Navigate to="/" /> : <Login />}
+          />
+          <Route
+            path="/register"
+            element={session ? <Navigate to="/" /> : <Register />}
+          />
+
+          {/* ── Rotas protegidas ── */}
+          <Route
+            path="/profile"
+            element={
+              session ? (
+                <MainLayout>
+                  <Profile />
+                </MainLayout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/checkout/address"
+            element={session ? <Address /> : <Navigate to="/login" />}
+          />
+
+          {/* ── Fallback ── */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </CartProvider>
     </BrowserRouter>
   );
 }

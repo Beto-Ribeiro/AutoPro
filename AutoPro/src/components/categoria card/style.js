@@ -1,48 +1,38 @@
 import styled from "styled-components";
 
-export const Container = styled.div`
+export const Container = styled.a`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  min-width: 180px;
-  height: 120px;
-  margin-bottom: 12px;
-  background-color: var(--white);
-  border: 1px solid var(--primary);
-  border-radius: 8px;
+  padding: var(--stack-lg);
+  background-color: var(--surface-container-lowest);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  text-decoration: none;
+  gap: var(--stack-sm);
 
   &:hover {
-    cursor: pointer;
-    background-color: var(--gray);
+    box-shadow: var(--shadow-sm);
+    .cat-icon { color: var(--primary); }
+    .cat-label { color: var(--on-surface); }
   }
 `;
 
-export const Img = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-
-  img {
-    width: 70px;
-    height: 60px;
-    object-fit: contain;
-  }
+export const CatIcon = styled.span`
+  font-size: 2.25rem !important;
+  color: var(--secondary);
+  transition: color 0.2s;
+  display: block;
 `;
 
-export const Description = styled.div`
-  padding: 12px;
-  width: 100%;
+export const CatLabel = styled.span`
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--on-surface);
   text-align: center;
-
-  p {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--secondary);
-    font-weight: bold;
-    font-size: 14px;
-    margin: 0;
-  }
-`
+  transition: color 0.2s;
+`;

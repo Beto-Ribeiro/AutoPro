@@ -1,43 +1,82 @@
 import styled from "styled-components";
 
-export const Container = styled.div`
-  background-color: #cfcccc;
+export const FooterWrapper = styled.footer`
+  background-color: var(--surface-container-highest);
+  border-top: 1px solid var(--outline-variant);
   width: 100%;
-  height: 200px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 40px;
-  box-sizing: border-box;
+  margin-top: auto;
 `;
 
-export const InfoBlock = styled.div`
+export const FooterInner = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gutter);
+  padding: var(--stack-lg) var(--margin-desktop);
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 2fr 1fr;
+  }
+
+  @media (max-width: 768px) {
+    padding: var(--stack-lg) var(--margin-mobile);
+  }
+`;
+
+export const BrandBlock = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  color: black;
+  gap: var(--stack-md);
 
   h4 {
-    margin: 0;
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 700;
+    color: var(--on-surface);
   }
 
-  span {
-    font-size: 0.95rem;
-    color: #555555;
+  p {
+    font-size: 0.875rem;
+    color: var(--secondary);
+    line-height: 1.5;
   }
 `;
 
-export const ContactBlock = styled.div`
+export const LinksBlock = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: black;
-  text-align: right;
+  flex-wrap: wrap;
+  gap: var(--gutter);
+  align-items: flex-start;
 
-  span {
-    font-size: 0.95rem;
-    color: #555555;
+  @media (min-width: 768px) {
+    justify-content: center;
+  }
+
+  a {
+    font-size: 0.875rem;
+    color: var(--secondary);
+    opacity: 0.8;
+    transition: opacity 0.15s, color 0.15s;
+
+    &:hover {
+      color: var(--on-surface);
+      opacity: 1;
+    }
+  }
+`;
+
+export const CopyrightBlock = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: var(--secondary);
   }
 `;
