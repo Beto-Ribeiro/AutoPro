@@ -1,0 +1,9 @@
+{
+  "outputDirectory": "AutoPro/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
