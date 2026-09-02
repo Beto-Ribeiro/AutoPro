@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Rodape from './components/rodape';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Admin from './pages/Admin';
 
 /* ── Main app shell (header + banner + home + footer) ── */
 const MainLayout = () => (
@@ -48,6 +49,7 @@ function App() {
       <Routes>
         <Route path="/login"    element={session ? <Navigate to="/" /> : <Login />} />
         <Route path="/register" element={session ? <Navigate to="/" /> : <Register />} />
+        <Route path="/admin/*"  element={session ? <Admin /> : <Navigate to="/login" />} />
         <Route path="/*"        element={session ? <MainLayout /> : <Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
