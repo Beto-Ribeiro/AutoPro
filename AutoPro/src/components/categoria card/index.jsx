@@ -1,26 +1,13 @@
-import React, {Fragment} from "react";
-import {Container, Img, Description} from "./style";
+import React from "react";
+import { Container, CatIcon, CatLabel } from "./style";
 
+const Categoriacard = ({ icon, titulo, href = "#" }) => {
+  return (
+    <Container href={href}>
+      <CatIcon className="material-symbols-outlined cat-icon">{icon}</CatIcon>
+      <CatLabel className="cat-label">{titulo}</CatLabel>
+    </Container>
+  );
+};
 
-const Categoriacard = ({imagem, titulo}) => {
-
-    return(
-        
-        <Container>
-            <Img>
-            <img src={imagem} alt=""/>
-            
-            </Img>
-            <Description>
-                <p> {titulo} </p>
-            </Description>
-
-        </Container>
-
-    )
-
-
-
-}
-
-export default Categoriacard
+export default Categoriacard;
