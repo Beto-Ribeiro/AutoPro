@@ -1,5 +1,4 @@
 {
-  "outputDirectory": "AutoPro/dist",
   "rewrites": [
     {
       "source": "/(.*)",
