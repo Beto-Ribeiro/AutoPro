@@ -7,10 +7,12 @@ import Rodape from './components/rodape';
 import Global from './styles/Global';
 import Home from './pages/Home';
 import Cart from './pages/Cart';
-import Address from './pages/Address';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import CheckoutReview from './pages/CheckoutReview';
+import CheckoutDelivery from './pages/CheckoutDelivery';
+import CheckoutPayment from './pages/CheckoutPayment';
 
 /* ─── Layouts ─────────────────────────────────────────────────── */
 
@@ -101,8 +103,16 @@ function App() {
             }
           />
           <Route
-            path="/checkout/address"
-            element={session ? <Address /> : <Navigate to="/login" />}
+            path="/checkout/review"
+            element={session ? <CheckoutReview /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/checkout/delivery"
+            element={session ? <CheckoutDelivery /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/checkout/payment"
+            element={session ? <CheckoutPayment /> : <Navigate to="/login" />}
           />
 
           {/* ── Fallback ── */}

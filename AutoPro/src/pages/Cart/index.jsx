@@ -166,7 +166,7 @@ const Cart = () => {
               if (!session) {
                 navigate("/login");
               } else {
-                navigate("/checkout/address");
+                navigate("/checkout/review");
               }
             }}
           >
