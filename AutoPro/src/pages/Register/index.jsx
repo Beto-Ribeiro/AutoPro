@@ -100,7 +100,7 @@ const Register = () => {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.senha,
       options: {
@@ -112,17 +112,36 @@ const Register = () => {
       },
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       setAlert({ type: 'error', message: error.message });
-    } else {
-      setAlert({
-        type: 'success',
-        message: 'Conta criada! Verifique seu e-mail para confirmar o cadastro.',
-      });
-      setTimeout(() => navigate('/login'), 3000);
+      return;
     }
+
+    // Garante que os dados do perfil estejam na tabela pública 'usuarios'.
+    // O trigger handle_new_user() faz isso automaticamente, mas este INSERT
+    // funciona como fallback caso o trigger ainda não esteja configurado.
+    if (signUpData?.user) {
+      await supabase
+        .from('usuarios')
+        .upsert(
+          {
+            id:       signUpData.user.id,
+            nome:     form.nome,
+            email:    form.email,
+            telefone: form.telefone,
+            cpf:      form.documento,
+          },
+          { onConflict: 'id', ignoreDuplicates: false }
+        );
+    }
+
+    setLoading(false);
+    setAlert({
+      type: 'success',
+      message: 'Conta criada! Verifique seu e-mail para confirmar o cadastro.',
+    });
+    setTimeout(() => navigate('/login'), 3000);
   };
 
   return (

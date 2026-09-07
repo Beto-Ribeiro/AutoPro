@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
+import Address from './pages/Address';
 import CheckoutReview from './pages/CheckoutReview';
 import CheckoutDelivery from './pages/CheckoutDelivery';
 import CheckoutPayment from './pages/CheckoutPayment';
@@ -97,6 +98,18 @@ function App() {
               session ? (
                 <MainLayout>
                   <Profile />
+                </MainLayout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/address"
+            element={
+              session ? (
+                <MainLayout>
+                  <Address />
                 </MainLayout>
               ) : (
                 <Navigate to="/login" />

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
 import {
   PageBg, FormCard, FormHeader, IconCircle, BrandName,
   FormTitle, FormSubtitle, Form, FieldGroup, Label,
@@ -12,14 +13,50 @@ const Address = () => {
     apelido: "", cep: "", logradouro: "", numero: "",
     complemento: "", bairro: "", cidade: "", uf: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState({ type: "", message: "" });
 
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // navigate to confirmation or next step
-    navigate("/");
+    setAlert({ type: "", message: "" });
+    setLoading(true);
+
+    // Obtém sessão atual
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      setLoading(false);
+      setAlert({ type: "error", message: "Você precisa estar logado para salvar um endereço." });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("enderecos")
+      .insert({
+        usuario_id:   session.user.id,
+        apelido:      form.apelido,
+        cep:          form.cep.replace(/\D/g, ""),
+        logradouro:   form.logradouro,
+        numero:       form.numero,
+        complemento:  form.complemento || null,
+        bairro:       form.bairro,
+        cidade:       form.cidade,
+        estado:       form.uf.toUpperCase(),
+        padrao:       false,
+      });
+
+    setLoading(false);
+
+    if (error) {
+      console.error("Erro ao salvar endereço:", error);
+      setAlert({ type: "error", message: "Erro ao salvar endereço. Tente novamente." });
+    } else {
+      setAlert({ type: "success", message: "Endereço salvo com sucesso!" });
+      setTimeout(() => navigate("/profile"), 1500);
+    }
   };
 
   const buscarCep = async () => {
@@ -42,6 +79,7 @@ const Address = () => {
     }
   };
 
+
   return (
     <PageBg>
       <FormCard>
@@ -54,6 +92,24 @@ const Address = () => {
           <FormTitle>Adicionar Endereço</FormTitle>
           <FormSubtitle>Insira os detalhes do novo endereço para entrega.</FormSubtitle>
         </FormHeader>
+
+        {/* ── Alert ── */}
+        {alert.message && (
+          <div
+            style={{
+              padding: '12px 16px',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              marginBottom: '8px',
+              background: alert.type === 'success' ? '#d1fae5' : '#fee2e2',
+              color: alert.type === 'success' ? '#065f46' : '#991b1b',
+              border: `1px solid ${alert.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+            }}
+          >
+            {alert.message}
+          </div>
+        )}
 
         {/* ── Form ── */}
         <Form onSubmit={handleSubmit}>
@@ -189,9 +245,9 @@ const Address = () => {
             </FieldGroup>
           </Row>
 
-          <SubmitBtn type="submit">
+          <SubmitBtn type="submit" disabled={loading}>
             <span className="material-symbols-outlined">check_circle</span>
-            Salvar Endereço
+            {loading ? 'Salvando...' : 'Salvar Endereço'}
           </SubmitBtn>
         </Form>
       </FormCard>

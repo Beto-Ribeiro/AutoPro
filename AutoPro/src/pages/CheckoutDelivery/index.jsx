@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
+import { supabase } from "../../lib/supabaseClient";
 import CheckoutLayout from "../../components/CheckoutLayout";
 import CheckoutSteps from "../../components/CheckoutSteps";
 import {
@@ -40,14 +41,57 @@ import {
 const fmt = (v) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+const SHIPPING_OPTIONS = [
+  { id: 1, label: "Expressa (Sedex)", desc: "Receba em até 2 dias úteis", price: 45.90 },
+  { id: 2, label: "Econômica (PAC)",  desc: "Receba em até 7 dias úteis", price: 22.50 },
+];
+
 const CheckoutDelivery = () => {
   const navigate = useNavigate();
-  const { cartItems, cartCount, cartTotal } = useCart();
-  const [address, setAddress] = useState(1);
-  const [shipping, setShipping] = useState(1); // 1 = Sedex, 2 = PAC
+  const { cartItems, cartCount, cartTotal, session } = useCart();
 
-  const shippingPrice = shipping === 1 ? 45.90 : 22.50;
-  const finalTotal = cartTotal + shippingPrice;
+  const [addresses, setAddresses]       = useState([]);
+  const [loadingAddr, setLoadingAddr]   = useState(true);
+  const [selectedAddr, setSelectedAddr] = useState(null);
+  const [shipping, setShipping]         = useState(1); // id da opção de frete
+
+  const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shipping);
+  const shippingPrice  = shippingOption?.price ?? 0;
+  const finalTotal     = cartTotal + shippingPrice;
+
+  // ── Carrega endereços do Supabase ──────────────────────────
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (!session) return;
+      setLoadingAddr(true);
+      const { data, error } = await supabase
+        .from("enderecos")
+        .select("*")
+        .eq("usuario_id", session.user.id)
+        .order("padrao", { ascending: false })
+        .order("created_at", { ascending: true });
+
+      if (!error && data) {
+        setAddresses(data);
+        // Pré-seleciona o endereço padrão ou o primeiro
+        const def = data.find((a) => a.padrao) || data[0];
+        if (def) setSelectedAddr(def.id);
+      }
+      setLoadingAddr(false);
+    };
+    fetchAddresses();
+  }, [session]);
+
+  const handleContinue = () => {
+    navigate("/checkout/payment", {
+      state: {
+        shippingPrice,
+        shippingLabel:   shippingOption?.label,
+        addressId:       selectedAddr,
+        addressSnapshot: addresses.find((a) => a.id === selectedAddr) || null,
+      },
+    });
+  };
 
   return (
     <CheckoutLayout>
@@ -58,58 +102,73 @@ const CheckoutDelivery = () => {
           <DeliveryContainer>
             <Title>Entrega e Frete</Title>
 
+            {/* ── Endereços ──────────────────────────────────── */}
             <SectionCard>
               <SectionHeader>
                 <h2>
                   <span className="material-symbols-outlined text-secondary">location_on</span>
                   Endereço de Entrega
                 </h2>
-                <button>
-                  <span className="material-symbols-outlined" style={{fontSize: 18}}>add</span>
+                <button onClick={() => navigate("/address")}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
                   Novo Endereço
                 </button>
               </SectionHeader>
-              
-              <GridOptions>
-                <OptionLabel>
-                  <input type="radio" name="address" checked={address === 1} onChange={() => setAddress(1)} />
-                  <OptionCard $active={address === 1}>
-                    <RadioHeader>
-                      <RadioTitle>
-                        <RadioCircle $active={address === 1} />
-                        Oficina Principal
-                      </RadioTitle>
-                      <Badge>Padrão</Badge>
-                    </RadioHeader>
-                    <AddressText>
-                      Av. das Indústrias, 1500<br/>
-                      Galpão 4<br/>
-                      São Paulo - SP, 01234-567
-                    </AddressText>
-                    <EditLink>Editar</EditLink>
-                  </OptionCard>
-                </OptionLabel>
 
-                <OptionLabel>
-                  <input type="radio" name="address" checked={address === 2} onChange={() => setAddress(2)} />
-                  <OptionCard $active={address === 2}>
-                    <RadioHeader>
-                      <RadioTitle>
-                        <RadioCircle $active={address === 2} />
-                        Residência
-                      </RadioTitle>
-                    </RadioHeader>
-                    <AddressText>
-                      Rua das Flores, 123<br/>
-                      Apto 45<br/>
-                      Campinas - SP, 13010-000
-                    </AddressText>
-                    <EditLink>Editar</EditLink>
-                  </OptionCard>
-                </OptionLabel>
-              </GridOptions>
+              {loadingAddr ? (
+                <p style={{ padding: "16px", color: "var(--secondary)", fontSize: 14 }}>
+                  Carregando endereços...
+                </p>
+              ) : addresses.length === 0 ? (
+                <div style={{ padding: "24px", textAlign: "center" }}>
+                  <p style={{ color: "var(--secondary)", fontSize: 14, marginBottom: 12 }}>
+                    Você não tem nenhum endereço cadastrado.
+                  </p>
+                  <button
+                    onClick={() => navigate("/address")}
+                    style={{
+                      background: "var(--primary)", color: "#fff",
+                      border: "none", padding: "10px 20px",
+                      borderRadius: "var(--radius-sm)", cursor: "pointer",
+                      fontWeight: 600, fontSize: 14,
+                    }}
+                  >
+                    + Adicionar Endereço
+                  </button>
+                </div>
+              ) : (
+                <GridOptions>
+                  {addresses.map((addr) => (
+                    <OptionLabel key={addr.id}>
+                      <input
+                        type="radio"
+                        name="address"
+                        checked={selectedAddr === addr.id}
+                        onChange={() => setSelectedAddr(addr.id)}
+                      />
+                      <OptionCard $active={selectedAddr === addr.id}>
+                        <RadioHeader>
+                          <RadioTitle>
+                            <RadioCircle $active={selectedAddr === addr.id} />
+                            {addr.apelido || "Endereço"}
+                          </RadioTitle>
+                          {addr.padrao && <Badge>Padrão</Badge>}
+                        </RadioHeader>
+                        <AddressText>
+                          {addr.logradouro}, {addr.numero}
+                          {addr.complemento && ` — ${addr.complemento}`}<br />
+                          {addr.bairro}, {addr.cidade} — {addr.estado}<br />
+                          CEP: {addr.cep}
+                        </AddressText>
+                        <EditLink onClick={() => navigate("/address")}>Editar</EditLink>
+                      </OptionCard>
+                    </OptionLabel>
+                  ))}
+                </GridOptions>
+              )}
             </SectionCard>
 
+            {/* ── Opções de frete ─────────────────────────────── */}
             <SectionCard>
               <SectionHeader>
                 <h2>
@@ -117,48 +176,43 @@ const CheckoutDelivery = () => {
                   Opções de Entrega
                 </h2>
               </SectionHeader>
-              
-              <ListOptions>
-                <OptionLabel>
-                  <input type="radio" name="shipping" checked={shipping === 1} onChange={() => setShipping(1)} />
-                  <OptionCard $active={shipping === 1} style={{ padding: '16px' }}>
-                    <OptionRow>
-                      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <RadioCircle $active={shipping === 1} />
-                        <div>
-                          <RadioTitle style={{ marginBottom: 0 }}>Expressa (Sedex)</RadioTitle>
-                          <OptionDesc>Receba em até 2 dias úteis</OptionDesc>
-                        </div>
-                      </div>
-                      <OptionPrice>{fmt(45.90)}</OptionPrice>
-                    </OptionRow>
-                  </OptionCard>
-                </OptionLabel>
 
-                <OptionLabel>
-                  <input type="radio" name="shipping" checked={shipping === 2} onChange={() => setShipping(2)} />
-                  <OptionCard $active={shipping === 2} style={{ padding: '16px' }}>
-                    <OptionRow>
-                      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <RadioCircle $active={shipping === 2} />
-                        <div>
-                          <RadioTitle style={{ marginBottom: 0 }}>Econômica (PAC)</RadioTitle>
-                          <OptionDesc>Receba em até 7 dias úteis</OptionDesc>
+              <ListOptions>
+                {SHIPPING_OPTIONS.map((opt) => (
+                  <OptionLabel key={opt.id}>
+                    <input
+                      type="radio"
+                      name="shipping"
+                      checked={shipping === opt.id}
+                      onChange={() => setShipping(opt.id)}
+                    />
+                    <OptionCard $active={shipping === opt.id} style={{ padding: "16px" }}>
+                      <OptionRow>
+                        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                          <RadioCircle $active={shipping === opt.id} />
+                          <div>
+                            <RadioTitle style={{ marginBottom: 0 }}>{opt.label}</RadioTitle>
+                            <OptionDesc>{opt.desc}</OptionDesc>
+                          </div>
                         </div>
-                      </div>
-                      <OptionPrice>{fmt(22.50)}</OptionPrice>
-                    </OptionRow>
-                  </OptionCard>
-                </OptionLabel>
+                        <OptionPrice>{fmt(opt.price)}</OptionPrice>
+                      </OptionRow>
+                    </OptionCard>
+                  </OptionLabel>
+                ))}
               </ListOptions>
             </SectionCard>
 
             <ActionRow>
-              <SecondaryBtn onClick={() => navigate('/checkout/review')}>
-                <span className="material-symbols-outlined" style={{fontSize: 20}}>arrow_back</span>
+              <SecondaryBtn onClick={() => navigate("/checkout/review")}>
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_back</span>
                 Voltar para Identificação
               </SecondaryBtn>
-              <PrimaryButton style={{ width: 'auto', padding: '12px 32px' }} onClick={() => navigate('/checkout/payment')}>
+              <PrimaryButton
+                style={{ width: "auto", padding: "12px 32px" }}
+                onClick={handleContinue}
+                disabled={!selectedAddr}
+              >
                 Ir para Pagamento
                 <span className="material-symbols-outlined icon">arrow_forward</span>
               </PrimaryButton>
@@ -166,27 +220,28 @@ const CheckoutDelivery = () => {
           </DeliveryContainer>
         </MainCol>
 
+        {/* ── Sidebar resumo ──────────────────────────────────── */}
         <SidebarCol>
           <SummaryBox style={{ top: 96 }}>
             <SectionHeader style={{ paddingBottom: 16 }}>
               <h2>Resumo do Pedido</h2>
             </SectionHeader>
             <SummaryContent style={{ paddingTop: 8 }}>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, borderBottom: '1px solid var(--surface-variant)', paddingBottom: 16, marginBottom: 8 }}>
-                {cartItems.map(item => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ display: 'flex', gap: 12 }}>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, borderBottom: "1px solid var(--surface-variant)", paddingBottom: 16, marginBottom: 8 }}>
+                {cartItems.map((item) => (
+                  <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ display: "flex", gap: 12 }}>
                       <SmallItemThumbnail style={{ backgroundImage: `url('${item.product?.imagem}')` }} />
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: 14, color: 'var(--on-surface)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <span style={{ fontSize: 14, color: "var(--on-surface)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                           {item.product?.titulo}
                         </span>
-                        <span style={{ fontSize: 12, color: 'var(--secondary)' }}>Qtd: {item.quantidade}</span>
+                        <span style={{ fontSize: 12, color: "var(--secondary)" }}>Qtd: {item.quantidade}</span>
                       </div>
                     </div>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--on-surface)' }}>
-                      {fmt(item.product?.valor * item.quantidade)}
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "var(--on-surface)" }}>
+                      {fmt((item.product?.valor ?? 0) * item.quantidade)}
                     </span>
                   </div>
                 ))}
@@ -200,30 +255,30 @@ const CheckoutDelivery = () => {
                 <span>Frete</span>
                 <span className="val">{fmt(shippingPrice)}</span>
               </SummaryRow>
-              
+
               <SummaryTotal>
                 <span className="label">Total</span>
-                <div style={{ textAlign: 'right' }}>
-                  <span className="val" style={{ display: 'block' }}>{fmt(finalTotal)}</span>
-                  <span style={{ fontSize: 12, color: 'var(--secondary)' }}>
+                <div style={{ textAlign: "right" }}>
+                  <span className="val" style={{ display: "block" }}>{fmt(finalTotal)}</span>
+                  <span style={{ fontSize: 12, color: "var(--secondary)" }}>
                     em até 6x de {fmt(finalTotal / 6)} s/ juros
                   </span>
                 </div>
               </SummaryTotal>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }} className="mobile-only-actions">
-                <PrimaryButton onClick={() => navigate('/checkout/payment')}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }} className="mobile-only-actions">
+                <PrimaryButton onClick={handleContinue} disabled={!selectedAddr}>
                   Ir para Pagamento
                   <span className="material-symbols-outlined icon">arrow_forward</span>
                 </PrimaryButton>
-                <SecondaryBtn style={{ width: '100%', justifyContent: 'center' }} onClick={() => navigate('/checkout/review')}>
+                <SecondaryBtn style={{ width: "100%", justifyContent: "center" }} onClick={() => navigate("/checkout/review")}>
                   Voltar
                 </SecondaryBtn>
               </div>
 
-              <SecurityInfo style={{ background: 'var(--surface-container-low)', padding: 12, borderRadius: 4, border: '1px solid var(--surface-variant)', alignItems: 'flex-start' }}>
+              <SecurityInfo style={{ background: "var(--surface-container-low)", padding: 12, borderRadius: 4, border: "1px solid var(--surface-variant)", alignItems: "flex-start" }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 20 }}>security</span>
-                <span style={{ fontSize: 12, textAlign: 'left' }}>Ambiente 100% seguro. Seus dados de entrega são criptografados.</span>
+                <span style={{ fontSize: 12, textAlign: "left" }}>Ambiente 100% seguro. Seus dados de entrega são criptografados.</span>
               </SecurityInfo>
 
             </SummaryContent>
