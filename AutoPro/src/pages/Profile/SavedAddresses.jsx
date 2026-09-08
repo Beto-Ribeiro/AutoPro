@@ -25,7 +25,16 @@ export default function SavedAddresses({ userId }) {
     {loading && <p role="status">Carregando endereços...</p>}
     {error && <p role="alert">{error} <button onClick={() => setReload(v => v + 1)}>Tentar novamente</button></p>}
     {!loading && !error && <GridContainer>{addresses.length ? addresses.map(address => <AddressBox key={address.id}>
-      <div className="actions"><Link to={`/profile/addresses/${address.id}/edit`} aria-label={`Editar ${address.apelido || 'endereço'}`}><span className="material-symbols-outlined">edit</span> Editar</Link></div>
+      <div className="actions">
+        <Link
+          className="edit-link"
+          to={`/profile/addresses/${address.id}/edit`}
+          aria-label={`Editar ${address.apelido || 'endereço'}`}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#565e74', textDecoration: 'none' }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>edit</span>
+        </Link>
+      </div>
       {address.padrao && <span className="badge">Padrão</span>}<h4>{address.apelido || 'Endereço de entrega'}</h4>
       <p>{address.logradouro}, {address.numero}{address.complemento && ` — ${address.complemento}`}<br />
       {address.bairro}, {address.cidade} — {address.estado}<br />CEP: {address.cep}</p>
