@@ -8,6 +8,7 @@ import Global from './styles/Global';
 import Home from './pages/Home';
 import Cart from './pages/Cart';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import Register from './pages/Register';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
@@ -87,6 +88,7 @@ function App() {
             path="/login"
             element={session ? <Navigate to="/" /> : <Login />}
           />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/register"
             element={session ? <Navigate to="/" /> : <Register />}

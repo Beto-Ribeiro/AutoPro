@@ -77,19 +77,20 @@ const Login = () => {
   };
 
   const handleForgot = async () => {
-    if (!email) {
+    const recoveryEmail = email.trim().toLowerCase();
+    if (!recoveryEmail) {
       setAlert({ type: 'error', message: 'Informe seu e-mail para redefinir a senha.' });
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
     if (error) {
       setAlert({ type: 'error', message: error.message });
     } else {
-      setAlert({ type: 'success', message: 'Link enviado! Verifique sua caixa de entrada.' });
+      setAlert({ type: 'success', message: 'Se houver uma conta com este e-mail, você receberá um link de recuperação. Verifique sua caixa de entrada e spam.' });
     }
   };
 
