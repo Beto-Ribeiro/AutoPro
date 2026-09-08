@@ -39,7 +39,7 @@ export default function PhotoPicker({ photos, onChange, onError }) {
     <Grid>{photos.map((photo, index) => <figure key={photo.id}>
       <div className="preview"><Preview photo={photo} index={index} /></div>
       <figcaption>{index === 0 ? 'Capa' : `Foto ${index + 1}`}</figcaption>
-      {index > 0 && <button type="button" onClick={() => onChange([photo, ...photos.filter(p => p.id !== photo.id)])}>Usar como capa</button>}
+      {index > 0 && <button type="button" onClick={() => onChange([photo, ...photos.filter(p => p.id !== photo.id)])}>⭐ Usar como capa</button>}
       <button type="button" aria-label={`Remover foto ${index + 1}`} onClick={() => onChange(photos.filter(p => p.id !== photo.id))}>Remover</button>
     </figure>)}</Grid>
   </div>;
