@@ -28,7 +28,7 @@ O ecossistema é composto por duas interfaces principais integradas a um núcleo
 
 A solução adota uma arquitetura de *Single Page Application (SPA)* conectada a uma plataforma *Backend as a Service (BaaS)*, seguindo a separação de responsabilidades.
 
-* **Frontend (Interface do Usuário):** O que o cliente vê no navegador. Construído com **React (Vite)** e **Tailwind CSS**. Gerenciamento de estado global (como sessões e carrinho) feito nativamente com a **React Context API**.
+* **Frontend (Interface do Usuário):** O que o cliente vê no navegador. Construído com **React (Vite)**. Gerenciamento de estado global (como sessões e carrinho) feito nativamente com a **React Context API**.
 * **Backend (Regras de Negócio):** O "cérebro" do sistema. Utiliza o **Supabase** (que roda Node.js/PostgREST nos bastidores) para gerenciar autenticação via JWT, regras de acesso (RLS) e *Storage* de imagens.
 * **Banco de Dados:** Onde ficam salvas as informações. Utiliza **PostgreSQL** hospedado em nuvem (via Supabase).
 * **Hospedagem & Infraestrutura:** **Vercel** para deploy contínuo do frontend.
