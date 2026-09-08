@@ -41,6 +41,10 @@ import {
   AlertMessage,
 } from './style';
 
+// Mantém os links enviados pelo Supabase no domínio de produção, inclusive se
+// o login for aberto por engano em um deployment de prévia do Vercel.
+const appUrl = (import.meta.env.VITE_APP_URL || 'https://autopro-humbertoribeironeto93-7170s-projects.vercel.app').replace(/\/$/, '');
+
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail]           = useState('');
@@ -68,7 +72,7 @@ const Login = () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: appUrl },
     });
     if (error) {
       setLoading(false);
@@ -84,7 +88,7 @@ const Login = () => {
     }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${appUrl}/reset-password`,
     });
     setLoading(false);
     if (error) {

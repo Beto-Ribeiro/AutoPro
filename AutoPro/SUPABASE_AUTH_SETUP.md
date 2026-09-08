@@ -3,6 +3,9 @@
 O fluxo usa `resetPasswordForEmail()` e leva o usuário para `/reset-password`,
 onde a senha é atualizada com `updateUser()` após a validação do link pelo Supabase.
 
+O endereço padrão de produção é `https://autopro-humbertoribeironeto93-7170s-projects.vercel.app`.
+Se o domínio mudar, defina `VITE_APP_URL` nas variáveis de ambiente da produção no Vercel.
+
 Antes de publicar, no painel do Supabase abra **Authentication → URL Configuration** e:
 
 1. Defina **Site URL** como o endereço público do AutoPro.
