@@ -79,28 +79,35 @@ Mostra as permissões e interações entre os clientes finais e os administrador
 
 ```mermaid
 flowchart LR
+    %% Atores
     C((👤 Cliente))
     A((🛠️ Admin))
 
+    %% Sistema
     subgraph E-commerce de Autopeças
         direction TB
-        UC1([Criar conta e fazer Login])
-        UC2([Buscar Produtos e Categorias])
-        UC3([Adicionar ao Carrinho])
-        UC4([Finalizar Compra / Pagamento])
-        UC5([Cadastrar / Editar Produtos])
-        UC6([Gerenciar / Atualizar Pedidos])
+        UC1([Cadastrar e Autenticar])
+        UC2([Navegar por Categorias])
+        UC3([Buscar Peças])
+        UC4([Gerenciar Carrinho])
+        UC5([Realizar Checkout])
+        UC6([Acessar Histórico])
+        UC7([Gerenciar Produtos])
+        UC8([Gerenciar Pedidos])
     end
 
+    %% Relacionamentos do Cliente
     C --- UC1
     C --- UC2
     C --- UC3
     C --- UC4
+    C --- UC5
+    C --- UC6
 
+    %% Relacionamentos do Admin
     A --- UC1
-    A --- UC5
-    A --- UC6
-
+    A --- UC7
+    A --- UC8
 ```
 
 ### **5.2. Diagrama Entidade-Relacionamento (DER)**
@@ -109,43 +116,140 @@ Exibe como as tabelas essenciais do banco de dados se relacionam.
 
 ```mermaid
 erDiagram
-    USUARIO ||--o{ PEDIDO : "realiza (1:N)"
-    CATEGORIA ||--o{ PRODUTO : "classifica (1:N)"
-    PEDIDO ||--|{ ITEM_PEDIDO : "contém (1:N)"
-    PRODUTO ||--o{ ITEM_PEDIDO : "é listado em (1:N)"
+    %% Tabela Externa (Referência)
+    AUTH_USERS ||--o| USUARIOS : "1:1 (id)"
+    AUTH_USERS ||--o| SELLER_PROFILES : "1:1 (id)"
+    AUTH_USERS ||--o{ CART_ITEMS : "1:N (user_id)"
+    AUTH_USERS ||--o{ ORDERS : "1:N (user_id)"
+    AUTH_USERS ||--o{ ORDER_ITEMS : "1:N (seller_id)"
 
-    USUARIO {
+    %% -----------------
+    %% NÚCLEO PORTUGUÊS
+    %% -----------------
+    USUARIOS ||--o{ ENDERECOS : "1:N (usuario_id)"
+    USUARIOS ||--o{ PEDIDOS : "1:N (usuario_id)"
+    
+    ENDERECOS ||--o{ PEDIDOS : "1:N (endereco_id)"
+    
+    CATEGORIAS ||--o{ PRODUTOS : "1:N (categoria_id)"
+    
+    PRODUTOS ||--o{ PRODUTO_IMAGENS : "1:N (produto_id)"
+    PRODUTOS ||--o{ ITENS_PEDIDO : "1:N (produto_id)"
+    PRODUTOS ||--o{ MOVIMENTACAO_ESTOQUE : "1:N (produto_id)"
+    
+    CUPONS_DESCONTO ||--o{ PEDIDOS : "1:N (cupom_id)"
+    
+    PEDIDOS ||--o{ ITENS_PEDIDO : "1:N (pedido_id)"
+    PEDIDOS ||--o{ PAGAMENTOS : "1:N (pedido_id)"
+    PEDIDOS ||--o{ HISTORICO_STATUS_PEDIDO : "1:N (pedido_id)"
+    PEDIDOS ||--o{ MOVIMENTACAO_ESTOQUE : "1:N (pedido_id)"
+
+    %% -----------------
+    %% NÚCLEO INGLÊS
+    %% -----------------
+    SELLER_PROFILES ||--o{ PRODUCTS : "1:N (seller_id)"
+    
+    PRODUCTS ||--o{ CART_ITEMS : "1:N (product_id)"
+    PRODUCTS ||--o{ ORDER_ITEMS : "1:N (product_id)"
+    
+    ORDERS ||--o{ ORDER_ITEMS : "1:N (order_id)"
+
+    %% Entidades e Atributos Principais
+    USUARIOS {
         uuid id PK
-        string nome
-        string email
-        string senha_hash
-        string endereco
+        varchar nome
+        varchar cpf UK
+        boolean is_admin
     }
-    CATEGORIA {
-        uuid id PK
-        string nome
-    }
-    PRODUTO {
-        uuid id PK
-        uuid categoria_id FK
-        string nome
-        string descricao
-        float preco
-        int estoque
-    }
-    PEDIDO {
+    ENDERECOS {
         uuid id PK
         uuid usuario_id FK
-        date data_criacao
-        float valor_total
-        string status
+        varchar cep
+        varchar logradouro
     }
-    ITEM_PEDIDO {
+    CATEGORIAS {
+        uuid id PK
+        varchar nome UK
+    }
+    PRODUTOS {
+        uuid id PK
+        uuid categoria_id FK
+        varchar nome
+        numeric preco
+        integer estoque
+    }
+    PRODUTO_IMAGENS {
+        uuid id PK
+        uuid produto_id FK
+        text url
+    }
+    CUPONS_DESCONTO {
+        uuid id PK
+        varchar codigo UK
+        numeric valor
+    }
+    PEDIDOS {
+        uuid id PK
+        uuid usuario_id FK
+        uuid endereco_id FK
+        uuid cupom_id FK
+        numeric total
+        status_pedido status
+    }
+    ITENS_PEDIDO {
         uuid id PK
         uuid pedido_id FK
         uuid produto_id FK
-        int quantidade
-        float preco_unitario
+        numeric preco_unitario
+        integer quantidade
+    }
+    PAGAMENTOS {
+        uuid id PK
+        uuid pedido_id FK
+        status_pagamento status_pagamento
+        numeric valor
+    }
+    HISTORICO_STATUS_PEDIDO {
+        uuid id PK
+        uuid pedido_id FK
+        status status
+    }
+    MOVIMENTACAO_ESTOQUE {
+        uuid id PK
+        uuid produto_id FK
+        uuid pedido_id FK
+        integer quantidade
+    }
+    PRODUCTS {
+        uuid id PK
+        uuid seller_id FK
+        text categoria
+        numeric valor
+        integer estoque
+    }
+    CART_ITEMS {
+        uuid id PK
+        uuid user_id FK
+        uuid product_id FK
+        integer quantidade
+    }
+    SELLER_PROFILES {
+        uuid id PK
+        text username UK
+    }
+    ORDERS {
+        uuid id PK
+        uuid user_id FK
+        text status
+        numeric total
+    }
+    ORDER_ITEMS {
+        uuid id PK
+        uuid order_id FK
+        uuid product_id FK
+        uuid seller_id FK
+        integer quantidade
+        numeric subtotal
     }
 
 ```
@@ -157,35 +261,60 @@ Mostra o passo a passo da jornada do cliente, do clique em "Comprar" até a fina
 ```mermaid
 sequenceDiagram
     autonumber
+    
     actor C as 👤 Cliente
-    participant F as 💻 Frontend (React/Context)
+    participant F as 💻 Frontend (React/Zustand)
     participant B as 🗄️ Backend (Supabase)
-    participant P as 💳 Gateway de Pagamento
+    participant P as 💳 Pagamento (Simulado)
 
-    C->>F: Busca e adiciona produto ao carrinho
-    F-->>F: Atualiza estado global (Carrinho)
-    C->>F: Clica em "Finalizar Compra"
+    %% Seleção e Carrinho
+    C->>F: Escolhe produto e adiciona ao carrinho
+    F-->>F: Atualiza estado global (Zustand)
+    C->>F: Clica em "Concluir Compra"
     
-    F->>C: Confirma itens e solicita Endereço
-    C->>F: Informa Endereço e Frete
+    %% Revisão dos Itens
+    F->>C: Exibe tela de revisão do carrinho (Itens e Subtotal)
     
-    C->>F: Seleciona Método de Pagamento e Paga
-    F->>B: Valida estoque e valor no BD
-    
-    alt Estoque Insuficiente
-        B-->>F: Retorna Erro
-        F-->>C: Avisa que o produto esgotou
-    else Estoque OK
-        B-->>F: Estoque Confirmado
-        F->>P: Processa Pagamento (Criptografado)
-        P-->>F: Pagamento Aprovado
-        
-        F->>B: Registra Pedido (Status: Pago)
-        Note over B: Abate item do estoque atual
-        B-->>F: Confirmação e Código do Pedido
-        F-->>C: Exibe tela de "Pedido Realizado com Sucesso"
+    alt Itens incorretos
+        C->>F: Volta para o carrinho
+        F-->>C: Exibe edição do carrinho (quantidades/remover)
+    else Itens corretos
+        C->>F: Confirma itens e prossegue
     end
 
+    %% Etapa de Endereço
+    F->>B: Requisita endereços salvos do usuário
+    B-->>F: Retorna lista de endereços
+    
+    alt Nenhum endereço salvo
+        F->>C: Solicita cadastro de endereço
+        C->>F: Preenche e salva novo endereço
+        F->>B: Registra endereço no banco
+        B-->>F: Confirmação de cadastro
+    end
+    
+    C->>F: Seleciona endereço e método de entrega (Valor Fixo)
+
+    %% Etapa de Pagamento e Validação
+    C->>F: Escolhe o método de pagamento
+    
+    F->>B: Solicita validação de estoque e "congelamento" de preço
+    alt Estoque Insuficiente
+        B-->>F: Erro: Quantidade superior ao estoque
+        F-->>C: Bloqueia compra e exibe aviso
+    else Estoque Disponível
+        B-->>F: Estoque validado e preços confirmados
+    end
+
+    %% Processamento e Finalização
+    C->>F: Clica em "Pagar / Finalizar Pedido"
+    F->>P: Envia dados para processamento
+    P-->>F: Retorna Pagamento Aprovado (Fluxo Simulado)
+    
+    F->>B: Registra o pedido com status "Pago"
+    Note over B: Abatimento automático<br/>do estoque disponível
+    B-->>F: Pedido criado com sucesso (Gera Código de Rastreio)
+    F-->>C: Exibe tela de "Pedido Finalizado" com detalhes da compra
 ```
 
 ---
