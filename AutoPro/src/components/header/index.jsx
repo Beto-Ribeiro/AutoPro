@@ -14,8 +14,15 @@ import {
 
 const Header = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
+  const [draft, setDraft] = useState(null);
   const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const search = draft?.locationKey === location.key ? draft.value : location.pathname === '/' ? params.get('q') || '' : '';
+  const searchUrl = (value, submitted = false) => {
+    const next = location.pathname === '/' ? new URLSearchParams(location.search) : new URLSearchParams();
+    if (value) next.set('q', value); else next.delete('q');
+    return { pathname: '/', search: next.toString(), hash: submitted ? '#destaques' : '' };
+  };
   const { cartCount, session } = useCart();
   const isCartPage = location.pathname === "/cart";
 
@@ -32,8 +39,11 @@ const Header = () => {
       </LeftGroup>
 
       <RightGroup>
-        <SearchBar as="form" onSubmit={event => { event.preventDefault(); navigate(`/?q=${encodeURIComponent(search.trim())}#destaques`); }}>
-          <input type="search" aria-label="Buscar peças" placeholder="Buscar peças..." value={search} onChange={event => setSearch(event.target.value)} />
+        <SearchBar as="form" role="search" onSubmit={event => { event.preventDefault(); navigate(searchUrl(search.trim(), true)); }}>
+          <input type="search" aria-label="Buscar peças" placeholder="Buscar peças..." value={search} onChange={event => {
+            setDraft({ locationKey: location.key, value: event.target.value });
+            if (location.pathname === '/') navigate(searchUrl(event.target.value), { replace: true });
+          }} />
           <button type="submit" aria-label="Pesquisar" style={{ background: 'none', border: 0, display: 'flex' }}><span className="material-symbols-outlined">search</span></button>
         </SearchBar>
 

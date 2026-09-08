@@ -15,7 +15,10 @@ export const HeaderWrapper = styled.header`
   z-index: 50;
 
   @media (max-width: 768px) {
-    padding: 0 var(--margin-mobile);
+    padding: 12px var(--margin-mobile);
+    height: auto;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 `;
 
@@ -58,6 +61,7 @@ export const RightGroup = styled.div`
   display: flex;
   align-items: center;
   gap: var(--gutter);
+  @media (max-width: 768px) { display: contents; }
 `;
 
 export const SearchBar = styled.div`
@@ -95,7 +99,10 @@ export const SearchBar = styled.div`
   }
 
   @media (max-width: 768px) {
-    display: none;
+    display: flex;
+    order: 3;
+    flex-basis: 100%;
+    input { width: 100%; min-width: 0; flex: 1; }
   }
 `;
 
