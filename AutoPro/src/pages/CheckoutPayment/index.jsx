@@ -98,10 +98,11 @@ const CheckoutPayment = () => {
       // ── 2. Insere os itens do pedido ───────────────────────
       const orderItems = cartItems.map((item) => ({
         order_id:   orderData.id,
-        product_id: item.product?.id ?? null,
+        product_id: item.product?.id    ?? null,
         titulo:     item.product?.titulo ?? "Produto",
         valor:      item.product?.valor  ?? 0,
         quantidade: item.quantidade,
+        imagem:     item.product?.imagem ?? null,
       }));
 
       const { error: itemsError } = await supabase
