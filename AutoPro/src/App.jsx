@@ -11,7 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
-import Address from './pages/Address';
+import ProductDetails from './pages/ProductDetails';
 import CheckoutReview from './pages/CheckoutReview';
 import CheckoutDelivery from './pages/CheckoutDelivery';
 import CheckoutPayment from './pages/CheckoutPayment';
@@ -66,6 +66,7 @@ function App() {
       <CartProvider>
         <Routes>
           {/* ── Rotas públicas ── */}
+          <Route path="/products/:id" element={<MainLayout><ProductDetails /></MainLayout>} />
           <Route
             path="/"
             element={
@@ -93,11 +94,11 @@ function App() {
 
           {/* ── Rotas protegidas ── */}
           <Route
-            path="/profile"
+            path="/profile/*"
             element={
               session ? (
                 <MainLayout>
-                  <Profile />
+                  <Profile key={session.user.id} user={session.user} />
                 </MainLayout>
               ) : (
                 <Navigate to="/login" />
@@ -108,9 +109,7 @@ function App() {
             path="/address"
             element={
               session ? (
-                <MainLayout>
-                  <Address />
-                </MainLayout>
+                <Navigate to="/profile/addresses/new" replace />
               ) : (
                 <Navigate to="/login" />
               )

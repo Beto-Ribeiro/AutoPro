@@ -1,53 +1,32 @@
-import React from "react";
-import { useCart } from "../../context/CartContext";
-import { Container, Img, Description, Itens, Category, Title, Status, Price, AddButton } from "./style";
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
+import { money, productError } from '../../lib/products';
+import ProductImage from '../ProductImage';
+import { Container, Img, Description, Itens, Category, Title, Status, Price, AddButton } from './style';
 
-const Card = ({ id, imagem, categoria, titulo, status, valor, onAddToCart }) => {
+export default function Card({ product }) {
   const { addToCart, isInCart } = useCart();
-  const inCart = id ? isInCart(id) : false;
-  const isUnavailable = status && status.toLowerCase().includes("últimas");
-
-  const handleAdd = () => {
-    if (onAddToCart) return onAddToCart();
-    if (id) {
-      addToCart({ id, imagem, categoria, titulo, status, valor });
-    }
-  };
-
-  return (
-    <Container>
-      <Img>
-        <img src={imagem} alt={titulo} loading="lazy" />
-      </Img>
-      <Description>
-        <Itens>
-          <Category>{categoria}</Category>
-          <Title>{titulo}</Title>
-          <Status $available={!isUnavailable}>{status}</Status>
-          <Price>
-            {typeof valor === "number"
-              ? valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-              : valor}
-          </Price>
-        </Itens>
-        <AddButton onClick={handleAdd} $inCart={inCart} disabled={inCart}>
-          {inCart ? (
-            <>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}
-              >
-                check_circle
-              </span>
-              No Carrinho
-            </>
-          ) : (
-            "Adicionar ao Carrinho"
-          )}
-        </AddButton>
-      </Description>
-    </Container>
-  );
-};
-
-export default Card;
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const inCart = isInCart(product.id);
+  const available = product.ativo && product.estoque > 0;
+  async function add() {
+    setSaving(true); setError('');
+    try { await addToCart(product); } catch (err) { setError(productError(err)); }
+    finally { setSaving(false); }
+  }
+  return <Container>
+    <Link to={`/products/${product.id}`} aria-label={`Ver detalhes de ${product.titulo}`}><Img><ProductImage src={product.imagem} alt={product.titulo} /></Img></Link>
+    <Description><Itens>
+      <Category>{product.categoria}</Category>
+      <Link to={`/products/${product.id}`}><Title>{product.titulo}</Title></Link>
+      <small>Vendido por @{product.seller?.username}</small>
+      <Status $available={available}>{available ? `${product.condicao} · Em estoque` : 'Esgotado'}</Status>
+      <Price>{money(product.valor)}</Price>
+    </Itens>
+    {error && <p role="alert">{error}</p>}
+    <AddButton onClick={add} $inCart={inCart} disabled={inCart || !available || saving}>{saving ? 'Adicionando...' : inCart ? 'No carrinho' : !available ? 'Indisponível' : 'Adicionar ao carrinho'}</AddButton>
+    </Description>
+  </Container>;
+}

@@ -114,7 +114,14 @@ export const MainArea = styled.main`
 `;
 
 export const Sidebar = styled.aside`
-  display: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  padding: 12px;
+  height: fit-content;
   
   @media (min-width: 768px) {
     display: flex;
@@ -201,6 +208,7 @@ export const SidebarLink = styled.button`
 `;
 
 export const ContentArea = styled.div`
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -223,6 +231,7 @@ export const PageTitle = styled.h1`
 `;
 
 export const SectionCard = styled.section`
+  scroll-margin-top: 88px;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(15,23,42,0.08);

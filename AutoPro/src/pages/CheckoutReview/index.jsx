@@ -1,3 +1,4 @@
+import ProductImage from '../../components/ProductImage';
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
@@ -66,14 +67,14 @@ const CheckoutReview = () => {
                 cartItems.map((item) => (
                   <CartItemRow key={item.id}>
                     <ItemImage>
-                      <img src={item.product?.imagem} alt={item.product?.titulo} />
+                      <ProductImage src={item.product?.imagem} alt={item.product?.titulo} />
                     </ItemImage>
                     <ItemDetails>
                       <ItemHeaderRow>
                         <div>
                           <ItemCategory>{item.product?.categoria}</ItemCategory>
                           <ItemTitle>{item.product?.titulo}</ItemTitle>
-                          <ItemDesc>Em estoque</ItemDesc>
+                          <ItemDesc>{item.product?.status} · @{item.product?.seller?.username}</ItemDesc>
                         </div>
                         <ItemPrice>{fmt(item.product?.valor || 0)}</ItemPrice>
                       </ItemHeaderRow>

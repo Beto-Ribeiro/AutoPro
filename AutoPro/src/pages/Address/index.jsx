@@ -7,7 +7,7 @@ import {
   InputWrapper, Input, Row, CepRow, BuscarBtn, SubmitBtn,
 } from "./style";
 
-const Address = () => {
+const Address = ({ embedded = false }) => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     apelido: "", cep: "", logradouro: "", numero: "",
@@ -55,7 +55,7 @@ const Address = () => {
       setAlert({ type: "error", message: "Erro ao salvar endereço. Tente novamente." });
     } else {
       setAlert({ type: "success", message: "Endereço salvo com sucesso!" });
-      setTimeout(() => navigate("/profile"), 1500);
+      navigate('/profile/addresses');
     }
   };
 
@@ -81,15 +81,15 @@ const Address = () => {
 
 
   return (
-    <PageBg>
-      <FormCard>
+    <PageBg $embedded={embedded}>
+      <FormCard as={embedded ? 'section' : 'main'} style={embedded ? { maxWidth: 'none' } : undefined}>
         {/* ── Header ── */}
         <FormHeader>
           <IconCircle>
             <span className="material-symbols-outlined">add_location_alt</span>
           </IconCircle>
-          <BrandName>AutoPro</BrandName>
-          <FormTitle>Adicionar Endereço</FormTitle>
+          {!embedded && <BrandName>AutoPro</BrandName>}
+          <FormTitle as={embedded ? 'h2' : 'h1'}>Adicionar Endereço</FormTitle>
           <FormSubtitle>Insira os detalhes do novo endereço para entrega.</FormSubtitle>
         </FormHeader>
 

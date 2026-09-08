@@ -1,5 +1,6 @@
+import ProductImage from '../../components/ProductImage';
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import {
   PageWrapper, CartSection, CartCard, CartItem,
@@ -78,12 +79,13 @@ const Cart = () => {
               return (
                 <CartItem key={item.id} style={{ opacity: isUpdating ? 0.6 : 1, transition: "opacity 0.2s" }}>
                   <ItemImage>
-                    <img src={p?.imagem} alt={p?.titulo} loading="lazy" />
+                    <ProductImage src={p?.imagem} alt={p?.titulo} />
                   </ItemImage>
 
                   <ItemInfo>
                     <span className="item-category">{p?.categoria}</span>
-                    <span className="item-title">{p?.titulo}</span>
+                    <Link className="item-title" to={`/products/${p.id}`}>{p?.titulo}</Link>
+                    <small>Vendido por @{p?.seller?.username}</small>
                     <span className="item-stock">
                       <span className="dot" />
                       {p?.status || "Em estoque"}

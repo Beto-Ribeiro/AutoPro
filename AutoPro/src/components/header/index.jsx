@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import {
@@ -14,6 +14,7 @@ import {
 
 const Header = () => {
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
   const location = useLocation();
   const { cartCount, session } = useCart();
   const isCartPage = location.pathname === "/cart";
@@ -23,17 +24,17 @@ const Header = () => {
       <LeftGroup>
         <Logo onClick={() => navigate("/")}>AutoPro</Logo>
         <Nav>
-          <Link to="/#freios">Freios</Link>
-          <Link to="/#motor">Motor</Link>
-          <Link to="/#suspensao">Suspensão</Link>
-          <Link to="/#oleo">Óleo</Link>
+          <Link to="/?categoria=Freios">Freios</Link>
+          <Link to="/?categoria=Motor">Motor</Link>
+          <Link to="/?categoria=Suspensão">Suspensão</Link>
+          <Link to="/?categoria=Óleo">Óleo</Link>
         </Nav>
       </LeftGroup>
 
       <RightGroup>
-        <SearchBar>
-          <input type="text" placeholder="Buscar peças..." />
-          <span className="material-symbols-outlined">search</span>
+        <SearchBar as="form" onSubmit={event => { event.preventDefault(); navigate(`/?q=${encodeURIComponent(search.trim())}#destaques`); }}>
+          <input type="search" aria-label="Buscar peças" placeholder="Buscar peças..." value={search} onChange={event => setSearch(event.target.value)} />
+          <button type="submit" aria-label="Pesquisar" style={{ background: 'none', border: 0, display: 'flex' }}><span className="material-symbols-outlined">search</span></button>
         </SearchBar>
 
         {session ? (

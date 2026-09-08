@@ -1,19 +1,19 @@
 import styled from "styled-components";
 
 export const PageBg = styled.div`
-  min-height: 100vh;
+  min-height: ${({ $embedded }) => $embedded ? 'auto' : '100vh'};
   background-color: var(--background);
   background-image: radial-gradient(var(--surface-container-highest) 1px, transparent 1px);
   background-size: 24px 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--margin-mobile);
+  padding: ${({ $embedded }) => $embedded ? '0' : 'var(--margin-mobile)'};
   position: relative;
   overflow-x: hidden;
 
   @media (min-width: 768px) {
-    padding: var(--margin-desktop);
+    padding: ${({ $embedded }) => $embedded ? '0' : 'var(--margin-desktop)'};
   }
 `;
 

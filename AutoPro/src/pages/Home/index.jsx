@@ -1,112 +1,43 @@
-import React, { useEffect, useState } from "react";
-import Card from "../../components/card";
-import Categoriacard from "../../components/categoria card";
-import Banner from "../../components/banner";
-import { supabase } from "../../lib/supabaseClient";
-import { PageWrapper, Section, SectionHeader, CategoriesGrid, ProductGrid } from "./style";
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import Card from '../../components/card';
+import Categoriacard from '../../components/categoria card';
+import Banner from '../../components/banner';
+import { CATEGORIES, listProducts, productError } from '../../lib/products';
+import { PageWrapper, Section, SectionHeader, CategoriesGrid, ProductGrid } from './style';
 
-const CATEGORIES = [
-  { icon: "settings",       titulo: "Transmissão" },
-  { icon: "build",           titulo: "Motor"       },
-  { icon: "directions_car",  titulo: "Suspensão"   },
-  { icon: "bolt",            titulo: "Acessórios"  },
-  { icon: "shield",          titulo: "Freios"      },
-];
+const icons = ['settings', 'build', 'directions_car', 'bolt', 'shield', 'water_drop'];
 
-// Skeleton placeholder while loading
-const ProductSkeleton = () => (
-  <div
-    style={{
-      background: "var(--surface-container-low)",
-      borderRadius: "var(--radius-md)",
-      border: "1px solid var(--outline-variant)",
-      aspectRatio: "3/4",
-      animation: "pulse 1.5s ease-in-out infinite",
-    }}
-  />
-);
-
-const Home = () => {
+export default function Home() {
   const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [error, setError] = useState(null);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [reload, setReload] = useState(0);
+  const [params] = useSearchParams();
+  const category = params.get('categoria') || '';
+  const query = (params.get('q') || '').toLocaleLowerCase('pt-BR');
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoadingProducts(true);
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("Erro ao carregar produtos:", error);
-        setError(error.message);
-      } else {
-        setProducts(data || []);
-      }
-      setLoadingProducts(false);
-    };
-
-    fetchProducts();
-  }, []);
-
-  return (
-    <PageWrapper>
-      {/* ── Hero ── */}
-      <Banner />
-
-      {/* ── Categorias ── */}
-      <Section id="categorias">
-        <SectionHeader>
-          <h2>Categorias</h2>
-        </SectionHeader>
-        <CategoriesGrid>
-          {CATEGORIES.map((cat) => (
-            <Categoriacard key={cat.titulo} icon={cat.icon} titulo={cat.titulo} />
-          ))}
-        </CategoriesGrid>
-      </Section>
-
-      {/* ── Destaques ── */}
-      <Section id="destaques">
-        <SectionHeader>
-          <h2>Destaques</h2>
-          <a href="#">Ver todos</a>
-        </SectionHeader>
-
-        {error && (
-          <p style={{ color: "var(--error)", fontSize: "0.875rem" }}>
-            Erro ao carregar produtos: {error}
-          </p>
-        )}
-
-        <ProductGrid>
-          {loadingProducts
-            ? Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
-            : products.map((p) => (
-                <Card
-                  key={p.id}
-                  id={p.id}
-                  imagem={p.imagem}
-                  categoria={p.categoria}
-                  titulo={p.titulo}
-                  status={p.status}
-                  valor={p.valor}
-                />
-              ))}
-        </ProductGrid>
-      </Section>
-
-      {/* Keyframe for skeleton pulse */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-      `}</style>
-    </PageWrapper>
-  );
-};
-
-export default Home;
+    let active = true;
+    (async () => {
+      setLoading(true); setError('');
+      try { const items = await listProducts(); if (active) setProducts(items); }
+      catch (err) { if (active) { setProducts([]); setError(productError(err)); } }
+      finally { if (active) setLoading(false); }
+    })();
+    return () => { active = false; };
+  }, [reload]);
+  const filtered = products.filter(p => (!category || p.categoria === category) &&
+    `${p.titulo} ${p.categoria} ${p.marca} ${p.seller?.username}`.toLocaleLowerCase('pt-BR').includes(query));
+  return <PageWrapper>
+    <Banner />
+    <Section id="categorias"><SectionHeader><h2>Categorias</h2></SectionHeader>
+      <CategoriesGrid>{CATEGORIES.map((name, i) => <Categoriacard key={name} icon={icons[i]} titulo={name} href={`/?categoria=${encodeURIComponent(name)}#destaques`} />)}</CategoriesGrid>
+    </Section>
+    <Section id="destaques"><SectionHeader><h2>{category || 'Produtos à venda'}</h2><Link to="/">Ver todos</Link></SectionHeader>
+      {loading && <p role="status">Carregando produtos...</p>}
+      {error && <div role="alert"><p>{error}</p><button onClick={() => setReload(value => value + 1)}>Tentar novamente</button></div>}
+      {!loading && !error && filtered.length === 0 && <p>{category || query ? 'Nenhum produto encontrado para esta busca.' : 'Ainda não há produtos à venda.'} <Link to="/profile#meus-produtos">Cadastre seu primeiro anúncio.</Link></p>}
+      {!loading && !error && <ProductGrid>{filtered.map(product => <Card key={product.id} product={product} />)}</ProductGrid>}
+    </Section>
+  </PageWrapper>;
+}

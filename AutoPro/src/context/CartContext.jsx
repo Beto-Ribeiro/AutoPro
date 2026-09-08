@@ -6,6 +6,7 @@ import React, {
   useCallback,
 } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { PRODUCT_SELECT } from '../lib/products';
 
 /* ─────────────────────────────────────────────────────────────────
    CartContext
@@ -23,7 +24,8 @@ const GUEST_KEY = 'autopro_guest_cart';
 
 function readGuestCart() {
   try {
-    return JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
+    const items = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
+    return Array.isArray(items) ? items.filter(i => i.product?.seller_id && i.product?.ativo && Number.isInteger(i.quantidade) && i.quantidade > 0) : [];
   } catch {
     return [];
   }
@@ -51,15 +53,6 @@ export const CartProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Load cart whenever session changes ───────────────────────
-  useEffect(() => {
-    if (session) {
-      fetchCartFromDB(session.user.id);
-    } else {
-      loadGuestCart();
-    }
-  }, [session]);
-
   // ── DB fetch ─────────────────────────────────────────────────
   const fetchCartFromDB = useCallback(async (userId) => {
     setLoading(true);
@@ -68,24 +61,41 @@ export const CartProvider = ({ children }) => {
       .select(`
         id,
         quantidade,
-        product:products (
-          id, categoria, titulo, status, valor, imagem
-        )
+        product:products (${PRODUCT_SELECT})
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
 
     if (!error && data) {
-      setCartItems(data);
+      setCartItems(data.filter(i => i.product?.seller_id && i.product.ativo && i.product.estoque > 0));
     }
     setLoading(false);
   }, []);
 
   // ── Guest cart ────────────────────────────────────────────────
-  const loadGuestCart = useCallback(() => {
-    setCartItems(readGuestCart());
+  const loadGuestCart = useCallback(async () => {
+    setLoading(true);
+    const guest = readGuestCart();
+    if (!guest.length) { setCartItems([]); setLoading(false); return; }
+    const { data, error } = await supabase.from('products').select(PRODUCT_SELECT).in('id', guest.map(i => i.product.id)).eq('ativo', true).not('seller_id', 'is', null);
+    if (!error) {
+      const current = guest.flatMap(item => {
+        const product = data.find(p => p.id === item.product.id && p.estoque > 0);
+        return product ? [{ ...item, product, quantidade: Math.min(item.quantidade, product.estoque) }] : [];
+      });
+      writeGuestCart(current); setCartItems(current);
+    } else { setCartItems([]); }
     setLoading(false);
   }, []);
+
+  // ── Load cart whenever session changes ───────────────────────
+  useEffect(() => {
+    if (session) {
+      fetchCartFromDB(session.user.id);
+    } else {
+      loadGuestCart();
+    }
+  }, [session, fetchCartFromDB, loadGuestCart]);
 
   // ── Migrate guest → DB on login ──────────────────────────────
   useEffect(() => {
@@ -95,55 +105,30 @@ export const CartProvider = ({ children }) => {
 
     (async () => {
       for (const item of guest) {
-        await supabase
+        const { data: product } = await supabase.from('products').select('id, estoque').eq('id', item.product.id).eq('ativo', true).not('seller_id', 'is', null).maybeSingle();
+        if (!product || product.estoque < 1) continue;
+        const { error } = await supabase
           .from('cart_items')
           .upsert(
             {
               user_id:    session.user.id,
               product_id: item.product.id,
-              quantidade: item.quantidade,
+              quantidade: Math.min(item.quantidade, product.estoque),
             },
             { onConflict: 'user_id,product_id', ignoreDuplicates: false }
           );
+        if (error) return;
       }
       localStorage.removeItem(GUEST_KEY);
       fetchCartFromDB(session.user.id);
     })();
-  }, [session]);
-
-  // ── addToCart ─────────────────────────────────────────────────
-  const addToCart = useCallback(async (product) => {
-    if (session) {
-      // Check if already in cart
-      const existing = cartItems.find((i) => i.product.id === product.id);
-      if (existing) {
-        return updateQty(existing.id, existing.quantidade + 1);
-      }
-      const { error } = await supabase
-        .from('cart_items')
-        .insert({ user_id: session.user.id, product_id: product.id, quantidade: 1 });
-      if (!error) fetchCartFromDB(session.user.id);
-    } else {
-      // Guest mode
-      const guest = readGuestCart();
-      const idx = guest.findIndex((i) => i.product.id === product.id);
-      if (idx >= 0) {
-        guest[idx].quantidade += 1;
-      } else {
-        guest.push({
-          id: `guest-${product.id}`,
-          product,
-          quantidade: 1,
-        });
-      }
-      writeGuestCart(guest);
-      setCartItems([...guest]);
-    }
-  }, [session, cartItems]);
+  }, [session, fetchCartFromDB]);
 
   // ── updateQty ─────────────────────────────────────────────────
   const updateQty = useCallback(async (cartItemId, qty) => {
     if (qty < 1) return;
+    const item = cartItems.find(i => i.id === cartItemId);
+    if (!item || qty > item.product.estoque) return;
 
     if (session) {
       const { error } = await supabase
@@ -163,7 +148,43 @@ export const CartProvider = ({ children }) => {
       writeGuestCart(guest);
       setCartItems([...guest]);
     }
-  }, [session]);
+  }, [session, cartItems]);
+
+  // ── addToCart ─────────────────────────────────────────────────
+  const addToCart = useCallback(async (product) => {
+    const { data: current, error: productError } = await supabase.from('products').select(PRODUCT_SELECT).eq('id', product.id).eq('ativo', true).not('seller_id', 'is', null).maybeSingle();
+    if (productError) throw productError;
+    if (!current || current.estoque < 1) throw new Error('Este produto não está mais disponível.');
+    product = current;
+    if (session) {
+      // Check if already in cart
+      const existing = cartItems.find((i) => i.product.id === product.id);
+      if (existing) {
+        return updateQty(existing.id, existing.quantidade + 1);
+      }
+      const { error } = await supabase
+        .from('cart_items')
+        .insert({ user_id: session.user.id, product_id: product.id, quantidade: 1 });
+      if (error) throw error;
+      await fetchCartFromDB(session.user.id);
+    } else {
+      // Guest mode
+      const guest = readGuestCart();
+      const idx = guest.findIndex((i) => i.product.id === product.id);
+      if (idx >= 0) {
+        if (guest[idx].quantidade >= product.estoque) throw new Error('Quantidade máxima disponível atingida.');
+        guest[idx].quantidade += 1;
+      } else {
+        guest.push({
+          id: `guest-${product.id}`,
+          product,
+          quantidade: 1,
+        });
+      }
+      writeGuestCart(guest);
+      setCartItems([...guest]);
+    }
+  }, [session, cartItems, fetchCartFromDB, updateQty]);
 
   // ── removeFromCart ────────────────────────────────────────────
   const removeFromCart = useCallback(async (cartItemId) => {

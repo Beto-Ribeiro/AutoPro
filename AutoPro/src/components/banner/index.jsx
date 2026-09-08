@@ -9,7 +9,7 @@ const Banner = () => {
         <BannerContent>
           <h1>Ofertas de Alta Performance</h1>
           <p>Encontre as melhores peças para o seu veículo com descontos imperdíveis.</p>
-          <BannerCta>Ver Ofertas</BannerCta>
+          <BannerCta as="a" href="#destaques">Ver Ofertas</BannerCta>
         </BannerContent>
       </BannerOverlay>
     </BannerSection>
