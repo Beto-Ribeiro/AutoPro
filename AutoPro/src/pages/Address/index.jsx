@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import {
   PageBg, FormCard, FormHeader, IconCircle, BrandName,
@@ -9,12 +9,42 @@ import {
 
 const Address = ({ embedded = false }) => {
   const navigate = useNavigate();
+  const { addressId } = useParams();
+  const isEditing = Boolean(addressId);
   const [form, setForm] = useState({
     apelido: "", cep: "", logradouro: "", numero: "",
     complemento: "", bairro: "", cidade: "", uf: "",
   });
   const [loading, setLoading] = useState(false);
+  const [loadingAddress, setLoadingAddress] = useState(isEditing);
   const [alert, setAlert] = useState({ type: "", message: "" });
+
+  useEffect(() => {
+    if (!isEditing) return;
+    let active = true;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { navigate('/login'); return; }
+      const { data, error } = await supabase
+        .from('enderecos')
+        .select('*')
+        .eq('id', addressId)
+        .eq('usuario_id', session.user.id)
+        .maybeSingle();
+      if (!active) return;
+      if (error || !data) {
+        setAlert({ type: 'error', message: 'Endereço não encontrado.' });
+      } else {
+        setForm({
+          apelido: data.apelido || '', cep: data.cep || '', logradouro: data.logradouro || '',
+          numero: data.numero || '', complemento: data.complemento || '', bairro: data.bairro || '',
+          cidade: data.cidade || '', uf: data.estado || '',
+        });
+      }
+      setLoadingAddress(false);
+    })();
+    return () => { active = false; };
+  }, [addressId, isEditing, navigate]);
 
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -33,9 +63,7 @@ const Address = ({ embedded = false }) => {
       return;
     }
 
-    const { error } = await supabase
-      .from("enderecos")
-      .insert({
+    const payload = {
         usuario_id:   session.user.id,
         apelido:      form.apelido,
         cep:          form.cep.replace(/\D/g, ""),
@@ -45,8 +73,12 @@ const Address = ({ embedded = false }) => {
         bairro:       form.bairro,
         cidade:       form.cidade,
         estado:       form.uf.toUpperCase(),
-        padrao:       false,
-      });
+      };
+    if (!isEditing) payload.padrao = false;
+    const request = isEditing
+      ? supabase.from("enderecos").update(payload).eq('id', addressId).eq('usuario_id', session.user.id)
+      : supabase.from("enderecos").insert(payload);
+    const { error } = await request;
 
     setLoading(false);
 
@@ -54,7 +86,7 @@ const Address = ({ embedded = false }) => {
       console.error("Erro ao salvar endereço:", error);
       setAlert({ type: "error", message: "Erro ao salvar endereço. Tente novamente." });
     } else {
-      setAlert({ type: "success", message: "Endereço salvo com sucesso!" });
+      setAlert({ type: "success", message: isEditing ? "Endereço atualizado com sucesso!" : "Endereço salvo com sucesso!" });
       navigate('/profile/addresses');
     }
   };
@@ -89,8 +121,8 @@ const Address = ({ embedded = false }) => {
             <span className="material-symbols-outlined">add_location_alt</span>
           </IconCircle>
           {!embedded && <BrandName>AutoPro</BrandName>}
-          <FormTitle as={embedded ? 'h2' : 'h1'}>Adicionar Endereço</FormTitle>
-          <FormSubtitle>Insira os detalhes do novo endereço para entrega.</FormSubtitle>
+          <FormTitle as={embedded ? 'h2' : 'h1'}>{isEditing ? 'Editar Endereço' : 'Adicionar Endereço'}</FormTitle>
+          <FormSubtitle>{isEditing ? 'Atualize os detalhes do seu endereço de entrega.' : 'Insira os detalhes do novo endereço para entrega.'}</FormSubtitle>
         </FormHeader>
 
         {/* ── Alert ── */}
@@ -112,7 +144,7 @@ const Address = ({ embedded = false }) => {
         )}
 
         {/* ── Form ── */}
-        <Form onSubmit={handleSubmit}>
+        {loadingAddress ? <p style={{ textAlign: 'center', color: 'var(--secondary)' }}>Carregando endereço...</p> : <Form onSubmit={handleSubmit}>
 
           {/* Apelido */}
           <FieldGroup>
@@ -247,9 +279,10 @@ const Address = ({ embedded = false }) => {
 
           <SubmitBtn type="submit" disabled={loading}>
             <span className="material-symbols-outlined">check_circle</span>
-            {loading ? 'Salvando...' : 'Salvar Endereço'}
+            {loading ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Salvar Endereço'}
           </SubmitBtn>
         </Form>
+        }
       </FormCard>
     </PageBg>
   );

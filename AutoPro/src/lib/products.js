@@ -14,9 +14,10 @@ export function productError(error) {
   return error?.message || 'Não foi possível concluir a operação. Tente novamente.';
 }
 
-export async function listProducts(sellerId) {
+export async function listProducts(sellerId, excludedSellerId) {
   let query = supabase.from('products').select(PRODUCT_SELECT).not('seller_id', 'is', null);
-  query = sellerId ? query.eq('seller_id', sellerId) : query.eq('ativo', true);
+  query = sellerId ? query.eq('seller_id', sellerId) : query.eq('ativo', true).gt('estoque', 0);
+  if (!sellerId && excludedSellerId) query = query.neq('seller_id', excludedSellerId);
   const { data, error } = await query.order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];

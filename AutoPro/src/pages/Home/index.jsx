@@ -5,6 +5,7 @@ import Categoriacard from '../../components/categoria card';
 import Banner from '../../components/banner';
 import { CATEGORIES, listProducts, productError } from '../../lib/products';
 import { searchProducts } from '../../lib/productSearch';
+import { useCart } from '../../context/CartContext';
 import { PageWrapper, Section, SectionHeader, CategoriesGrid, ProductGrid } from './style';
 
 const icons = ['settings', 'build', 'directions_car', 'bolt', 'shield', 'water_drop'];
@@ -15,6 +16,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [reload, setReload] = useState(0);
   const [params] = useSearchParams();
+  const { session } = useCart();
   const location = useLocation();
   const category = params.get('categoria') || '';
   const query = (params.get('q') || '').trim();
@@ -25,12 +27,12 @@ export default function Home() {
     let active = true;
     (async () => {
       setLoading(true); setError('');
-      try { const items = await listProducts(); if (active) setProducts(items); }
+      try { const items = await listProducts(null, session?.user?.id); if (active) setProducts(items); }
       catch (err) { if (active) { setProducts([]); setError(productError(err)); } }
       finally { if (active) setLoading(false); }
     })();
     return () => { active = false; };
-  }, [reload]);
+  }, [reload, session?.user?.id]);
   const filtered = searchProducts(products, query, category);
   return <PageWrapper>
     <Banner />

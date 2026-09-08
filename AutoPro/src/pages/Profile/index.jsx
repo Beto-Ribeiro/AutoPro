@@ -43,6 +43,7 @@ export default function Profile({ user }) {
         <Route path="products" element={<SellerProducts userId={user.id} />} />
         <Route path="addresses" element={<SavedAddresses userId={user.id} />} />
         <Route path="addresses/new" element={<Address embedded />} />
+        <Route path="addresses/:addressId/edit" element={<Address embedded />} />
         <Route path="orders" element={<MyOrders userId={user.id} />} />
         <Route path="personal" element={<SectionCard><SectionHeader><h2>Informações pessoais</h2></SectionHeader><GridContainer>
           <InputGroup><label htmlFor="profile-name">Nome completo</label><input id="profile-name" disabled value={displayName} /></InputGroup>

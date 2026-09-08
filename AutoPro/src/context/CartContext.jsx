@@ -67,7 +67,7 @@ export const CartProvider = ({ children }) => {
       .order('created_at', { ascending: true });
 
     if (!error && data) {
-      setCartItems(data.filter(i => i.product?.seller_id && i.product.ativo && i.product.estoque > 0));
+      setCartItems(data.filter(i => i.product?.seller_id && i.product.seller_id !== userId && i.product.ativo && i.product.estoque > 0));
     }
     setLoading(false);
   }, []);
@@ -106,7 +106,7 @@ export const CartProvider = ({ children }) => {
     (async () => {
       for (const item of guest) {
         const { data: product } = await supabase.from('products').select('id, estoque').eq('id', item.product.id).eq('ativo', true).not('seller_id', 'is', null).maybeSingle();
-        if (!product || product.estoque < 1) continue;
+        if (!product || product.seller_id === session.user.id || product.estoque < 1) continue;
         const { error } = await supabase
           .from('cart_items')
           .upsert(
@@ -155,6 +155,7 @@ export const CartProvider = ({ children }) => {
     const { data: current, error: productError } = await supabase.from('products').select(PRODUCT_SELECT).eq('id', product.id).eq('ativo', true).not('seller_id', 'is', null).maybeSingle();
     if (productError) throw productError;
     if (!current || current.estoque < 1) throw new Error('Este produto não está mais disponível.');
+    if (session?.user?.id === current.seller_id) throw new Error('Você não pode adicionar seu próprio produto ao carrinho.');
     product = current;
     if (session) {
       // Check if already in cart

@@ -26,7 +26,7 @@ export default function ProductDetails() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [reload, setReload] = useState(0);
-  const { addToCart, isInCart } = useCart();
+  const { addToCart, isInCart, session } = useCart();
   useEffect(() => {
     let active = true;
     (async () => {
@@ -42,6 +42,7 @@ export default function ProductDetails() {
     return () => { active = false; };
   }, [id, reload]);
   const inCart = product && isInCart(product.id);
+  const isOwnProduct = product?.seller_id === session?.user?.id;
   const images = productImages(product);
   return <Page>
     <Link to="/">← Voltar ao catálogo</Link>
@@ -55,10 +56,10 @@ export default function ProductDetails() {
             {product.compatibilidade && <><dt>Compatibilidade</dt><dd>{product.compatibilidade}</dd></>}
           </dl>
           {!product.ativo && <p>Anúncio oculto do catálogo.</p>}
-          <button disabled={!product.ativo || product.estoque < 1 || inCart || saving} onClick={async () => {
+          {isOwnProduct ? <p>Este é um produto anunciado por você.</p> : <button disabled={!product.ativo || product.estoque < 1 || inCart || saving} onClick={async () => {
             setSaving(true); setError('');
             try { await addToCart(product); } catch (err) { setError(productError(err)); } finally { setSaving(false); }
-          }}>{saving ? 'Adicionando...' : inCart ? 'No carrinho' : !product.ativo || product.estoque < 1 ? 'Indisponível' : 'Adicionar ao carrinho'}</button>
+          }}>{saving ? 'Adicionando...' : inCart ? 'No carrinho' : !product.ativo || product.estoque < 1 ? 'Indisponível' : 'Adicionar ao carrinho'}</button>}
           <h2 style={{ marginTop: 32 }}>Descrição</h2><p className="description">{product.descricao}</p>
       </ProductGallery>}
     </>}

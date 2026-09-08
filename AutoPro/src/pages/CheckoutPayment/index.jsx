@@ -73,47 +73,23 @@ const CheckoutPayment = () => {
     setErrorMsg("");
 
     try {
-      // ── 1. Insere o pedido principal ───────────────────────
-      const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id:          session.user.id,
-          status:           "paid",
-          total:            finalTotal,
-          shipping_cost:    shippingPrice,
-          discount:         pixDiscount,
-          payment_method:   method === 1 ? "card" : "pix",
-          address_snapshot: addressFromDelivery,  // snapshot JSON do endereço
-        })
-        .select("id")
-        .single();
-
-      if (orderError) {
-        console.error("Erro ao criar pedido:", orderError);
-        setErrorMsg("Erro ao processar pedido. Tente novamente.");
-        setIsSubmitting(false);
+      const { error } = await supabase.rpc('create_order_and_decrement_stock', {
+        p_shipping_cost: shippingPrice,
+        p_payment_method: method === 1 ? 'card' : 'pix',
+        p_address_snapshot: addressFromDelivery,
+        p_items: cartItems.map((item) => ({
+          product_id: item.product?.id,
+          quantidade: item.quantidade,
+        })),
+      });
+      if (error) {
+        const insufficientStock = /estoque insuficiente/i.test(error.message || '');
+        setErrorMsg(insufficientStock
+          ? 'Um produto do carrinho acabou de esgotar. Atualize o carrinho e tente novamente.'
+          : 'Erro ao processar pedido. Tente novamente.');
         return;
       }
 
-      // ── 2. Insere os itens do pedido ───────────────────────
-      const orderItems = cartItems.map((item) => ({
-        order_id:   orderData.id,
-        product_id: item.product?.id ?? null,
-        titulo:     item.product?.titulo ?? "Produto",
-        valor:      item.product?.valor  ?? 0,
-        quantidade: item.quantidade,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
-
-      if (itemsError) {
-        console.error("Erro ao salvar itens do pedido:", itemsError);
-        // Pedido já criado — não bloqueia o fluxo mas registra o erro
-      }
-
-      // ── 3. Limpa carrinho e mostra confirmação ─────────────
       await clearCart();
       setShowSuccess(true);
 

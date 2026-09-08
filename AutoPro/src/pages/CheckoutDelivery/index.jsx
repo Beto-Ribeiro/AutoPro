@@ -52,6 +52,7 @@ const CheckoutDelivery = () => {
 
   const [addresses, setAddresses]       = useState([]);
   const [loadingAddr, setLoadingAddr]   = useState(true);
+  const [addressError, setAddressError] = useState("");
   const [selectedAddr, setSelectedAddr] = useState(null);
   const [shipping, setShipping]         = useState(1); // id da opção de frete
 
@@ -62,16 +63,24 @@ const CheckoutDelivery = () => {
   // ── Carrega endereços do Supabase ──────────────────────────
   useEffect(() => {
     const fetchAddresses = async () => {
-      if (!session) return;
+      if (!session?.user?.id) {
+        setAddresses([]);
+        setLoadingAddr(false);
+        return;
+      }
       setLoadingAddr(true);
+      setAddressError("");
       const { data, error } = await supabase
         .from("enderecos")
         .select("*")
         .eq("usuario_id", session.user.id)
         .order("padrao", { ascending: false })
-        .order("created_at", { ascending: true });
+        .order("apelido", { ascending: true });
 
-      if (!error && data) {
+      if (error) {
+        setAddresses([]);
+        setAddressError("Não foi possível carregar seus endereços. Tente novamente.");
+      } else if (data) {
         setAddresses(data);
         // Pré-seleciona o endereço padrão ou o primeiro
         const def = data.find((a) => a.padrao) || data[0];
@@ -119,6 +128,11 @@ const CheckoutDelivery = () => {
                 <p style={{ padding: "16px", color: "var(--secondary)", fontSize: 14 }}>
                   Carregando endereços...
                 </p>
+              ) : addressError ? (
+                <div style={{ padding: "24px", textAlign: "center" }}>
+                  <p style={{ color: "var(--secondary)", fontSize: 14, marginBottom: 12 }}>{addressError}</p>
+                  <button onClick={() => window.location.reload()}>Tentar novamente</button>
+                </div>
               ) : addresses.length === 0 ? (
                 <div style={{ padding: "24px", textAlign: "center" }}>
                   <p style={{ color: "var(--secondary)", fontSize: 14, marginBottom: 12 }}>
@@ -160,7 +174,7 @@ const CheckoutDelivery = () => {
                           {addr.bairro}, {addr.cidade} — {addr.estado}<br />
                           CEP: {addr.cep}
                         </AddressText>
-                        <EditLink onClick={() => navigate("/address")}>Editar</EditLink>
+                        <EditLink onClick={(event) => { event.preventDefault(); event.stopPropagation(); navigate(`/profile/addresses/${addr.id}/edit`); }}>Editar</EditLink>
                       </OptionCard>
                     </OptionLabel>
                   ))}
