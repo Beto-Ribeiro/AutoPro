@@ -240,6 +240,12 @@ export const SectionCard = styled.section`
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  .danger-zone { border-top: 1px solid #e0e3e5; margin-top: 12px; padding-top: 20px; }
+  .danger-zone h3 { margin: 0; color: #8d000d; font-size: 17px; }
+  .danger-zone p { max-width: 680px; color: #565e74; }
+  .delete-account { background: white; color: #b70011; border: 1px solid #b70011; border-radius: 6px; padding: 10px 16px; font: inherit; cursor: pointer; }
+  .delete-account:disabled { opacity: .6; cursor: wait; }
 `;
 
 export const SectionHeader = styled.div`
@@ -343,6 +349,16 @@ export const InputGroup = styled.div`
       opacity: 0.8;
     }
   }
+`;
+
+export const SecurityForm = styled.form`
+  display: grid;
+  gap: 16px;
+  max-width: 440px;
+
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 16px; }
+  button { width: fit-content; background: #b70011; color: white; border: 1px solid #b70011; border-radius: 6px; padding: 10px 16px; font: inherit; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: wait; }
 `;
 
 export const EmptyState = styled.div`

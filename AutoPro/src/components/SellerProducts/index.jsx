@@ -75,6 +75,21 @@ export default function SellerProducts({ userId }) {
     finally { setSaving(false); }
   }
 
+  async function deleteProduct(product) {
+    if (!window.confirm(`Excluir o anúncio “${product.titulo}”? Esta ação não pode ser desfeita.`)) return;
+    setSaving(true); setError(''); setMessage('');
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', product.id).eq('seller_id', userId);
+      if (error) throw error;
+      setProducts(current => current.filter(item => item.id !== product.id));
+      if (editingId === product.id) {
+        setEditingId(null); setForm(emptyForm); setPhotos([]); setDraftId(crypto.randomUUID());
+      }
+      setMessage('Anúncio excluído com sucesso.');
+    } catch (err) { setError(productError(err)); }
+    finally { setSaving(false); }
+  }
+
   function change(event) {
     const { name, value, type, checked } = event.target;
     setForm(current => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
@@ -119,7 +134,10 @@ export default function SellerProducts({ userId }) {
       <Listings>{products.map(product => <article key={product.id}>
         <div className="photo"><ProductImage src={product.imagem} alt={product.titulo} /></div>
         <div className="info"><Link to={`/products/${product.id}`}>{product.titulo}</Link><p>{money(product.valor)} · {product.estoque} em estoque</p><small>{product.ativo ? 'Publicado' : 'Oculto'}</small></div>
-        <button disabled={saving} onClick={() => { setEditingId(product.id); setForm({ ...emptyForm, ...product, imagem: product.imagem || '' }); setPhotos(productImages(product).map(url => ({ id: url, url }))); setMessage(''); document.getElementById('anuncio-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>Editar</button>
+        <div className="listing-actions">
+          <button type="button" disabled={saving} onClick={() => { setEditingId(product.id); setForm({ ...emptyForm, ...product, imagem: product.imagem || '' }); setPhotos(productImages(product).map(url => ({ id: url, url }))); setMessage(''); document.getElementById('anuncio-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>Editar</button>
+          <button type="button" className="delete" disabled={saving} onClick={() => deleteProduct(product)}>Excluir</button>
+        </div>
       </article>)}</Listings>
     </>}
   </SectionCard>;

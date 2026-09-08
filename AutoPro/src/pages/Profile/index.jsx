@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabaseClient';
 import Address from '../Address';
 import SavedAddresses from './SavedAddresses';
 import MyOrders from './MyOrders';
+import ChangePassword from './ChangePassword';
 import { ProfileContainer, MainArea, Sidebar, UserCard, SidebarLink, ContentArea,
   PageTitle, SectionCard, SectionHeader, GridContainer, InputGroup } from './style';
 
@@ -22,6 +23,7 @@ export default function Profile({ user }) {
   const displayName = profile?.nome || user.user_metadata?.nome || 'Usuário';
   const entries = [
     ['personal', 'person', 'Informações pessoais'],
+    ['security', 'lock', 'Senha e segurança'],
     ['addresses', 'location_on', 'Endereços salvos'],
     ['products', 'inventory_2', 'Meus produtos'],
     ['orders', 'receipt_long', 'Meus pedidos'],
@@ -51,6 +53,7 @@ export default function Profile({ user }) {
           <InputGroup><label htmlFor="profile-phone">Telefone</label><input id="profile-phone" disabled value={profile?.telefone || user.user_metadata?.telefone || ''} /></InputGroup>
           <InputGroup><label htmlFor="profile-document">CPF/CNPJ</label><input id="profile-document" disabled value={profile?.cpf || user.user_metadata?.documento || ''} /></InputGroup>
         </GridContainer></SectionCard>} />
+        <Route path="security" element={<ChangePassword />} />
         <Route path="*" element={<Navigate to="/profile/products" replace />} />
       </Routes>
     </ContentArea>

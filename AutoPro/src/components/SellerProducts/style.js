@@ -22,6 +22,9 @@ export const Listings = styled.div`
   img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
   .info { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   p { margin: 6px 0; }
+  .listing-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   button { background: white; color: #b70011; border: 1px solid #b70011; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+  button.delete { background: #b70011; color: white; }
+  button:disabled { opacity: .6; cursor: wait; }
   @media(max-width: 500px) { article { flex-wrap: wrap; } }
 `;
