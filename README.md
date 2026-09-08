@@ -80,8 +80,8 @@ Mostra as permissões e interações entre os clientes finais e os administrador
 ```mermaid
 flowchart LR
     %% Atores
-    C((👤 Cliente))
-    A((🛠️ Admin))
+    C(( Cliente))
+    A(( Admin))
 
     %% Sistema
     subgraph E-commerce de Autopeças
@@ -262,10 +262,10 @@ Mostra o passo a passo da jornada do cliente, do clique em "Comprar" até a fina
 sequenceDiagram
     autonumber
     
-    actor C as 👤 Cliente
-    participant F as 💻 Frontend (React/Zustand)
-    participant B as 🗄️ Backend (Supabase)
-    participant P as 💳 Pagamento (Simulado)
+    actor C as  Cliente
+    participant F as  Frontend (React/Zustand)
+    participant B as  Backend (Supabase)
+    participant P as  Pagamento (Simulado)
 
     %% Seleção e Carrinho
     C->>F: Escolhe produto e adiciona ao carrinho
