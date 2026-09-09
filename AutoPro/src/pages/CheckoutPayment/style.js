@@ -9,7 +9,8 @@ export const PaymentContainer = styled.div`
 
 export const PaymentOptionCard = styled(OptionCard)`
   padding: 0;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
 `;
 
 export const PaymentHeader = styled.div`
@@ -80,14 +81,26 @@ export const PixBox = styled.div`
   }
 
   .qr-placeholder {
-    width: 150px;
-    height: 150px;
+    width: min(100%, 168px);
+    aspect-ratio: 1;
+    padding: 6px;
+    box-sizing: border-box;
+    flex-shrink: 1;
+    overflow: visible;
     background-color: var(--surface-container-lowest);
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--surface-variant);
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+    }
   }
 `;
 

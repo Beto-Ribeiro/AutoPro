@@ -2,6 +2,7 @@ import ProductImage from '../../components/ProductImage';
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
+import { calculateShippingOptions } from "../../lib/shipping";
 import {
   PageWrapper, CartSection, CartCard, CartItem,
   ItemImage, ItemInfo, ItemControls, ItemPrice,
@@ -13,12 +14,12 @@ import {
 const fmt = (v) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const SHIPPING = 45.0;
-
 const Cart = () => {
   const navigate = useNavigate();
   const { cartItems, cartCount, cartTotal, loading, updateQty, removeFromCart, session } = useCart();
   const [cep, setCep] = useState("");
+  const [shipping, setShipping] = useState(null);
+  const [shippingError, setShippingError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
 
   const handleQty = async (id, newQty) => {
@@ -34,7 +35,19 @@ const Cart = () => {
     setUpdatingId(null);
   };
 
-  const total = cartTotal + SHIPPING;
+  const total = cartTotal + (shipping?.price || 0);
+
+  const handleCalculateShipping = () => {
+    const cleanCep = cep.replace(/\D/g, "");
+    if (cleanCep.length !== 8) {
+      setShipping(null);
+      setShippingError("Informe um CEP válido com 8 números.");
+      return;
+    }
+    const options = calculateShippingOptions(cleanCep, cartTotal);
+    setShipping(options.find((option) => option.id === 2));
+    setShippingError("");
+  };
 
   return (
     <PageWrapper>
@@ -142,19 +155,25 @@ const Cart = () => {
 
           <ShippingRow>
             <SummaryRow>
-              <span>Frete Estimado</span>
-              <span>{fmt(SHIPPING)}</span>
+              <span>{shipping ? `Frete ${shipping.label}` : "Frete Estimado"}</span>
+              <span>{shipping ? fmt(shipping.price) : "Informe o CEP"}</span>
             </SummaryRow>
             <CepInput>
               <input
                 type="text"
                 placeholder="CEP"
                 value={cep}
-                onChange={(e) => setCep(e.target.value)}
+                onChange={(e) => setCep(e.target.value.replace(/\D/g, "").slice(0, 8))}
                 maxLength={9}
               />
-              <button type="button">Calcular</button>
+              <button type="button" onClick={handleCalculateShipping}>Calcular</button>
             </CepInput>
+            {shipping && (
+              <small style={{ color: "var(--secondary)" }}>
+                {shipping.desc}. A opção expressa será exibida na etapa de entrega.
+              </small>
+            )}
+            {shippingError && <small style={{ color: "var(--error)" }}>{shippingError}</small>}
           </ShippingRow>
 
           <TotalRow>

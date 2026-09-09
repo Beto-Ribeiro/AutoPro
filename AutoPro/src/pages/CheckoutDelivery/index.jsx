@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { supabase } from "../../lib/supabaseClient";
+import { calculateShippingOptions } from "../../lib/shipping";
 import CheckoutLayout from "../../components/CheckoutLayout";
 import CheckoutSteps from "../../components/CheckoutSteps";
 import {
@@ -41,11 +42,6 @@ import {
 const fmt = (v) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const SHIPPING_OPTIONS = [
-  { id: 1, label: "Expressa (Sedex)", desc: "Receba em até 2 dias úteis", price: 45.90 },
-  { id: 2, label: "Econômica (PAC)",  desc: "Receba em até 7 dias úteis", price: 22.50 },
-];
-
 const CheckoutDelivery = () => {
   const navigate = useNavigate();
   const { cartItems, cartCount, cartTotal, session } = useCart();
@@ -56,7 +52,9 @@ const CheckoutDelivery = () => {
   const [selectedAddr, setSelectedAddr] = useState(null);
   const [shipping, setShipping]         = useState(1); // id da opção de frete
 
-  const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shipping);
+  const selectedAddress = addresses.find((address) => address.id === selectedAddr);
+  const shippingOptions = calculateShippingOptions(selectedAddress?.cep, cartTotal);
+  const shippingOption = shippingOptions.find((o) => o.id === shipping);
   const shippingPrice  = shippingOption?.price ?? 0;
   const finalTotal     = cartTotal + shippingPrice;
 
@@ -97,7 +95,7 @@ const CheckoutDelivery = () => {
         shippingPrice,
         shippingLabel:   shippingOption?.label,
         addressId:       selectedAddr,
-        addressSnapshot: addresses.find((a) => a.id === selectedAddr) || null,
+        addressSnapshot: selectedAddress || null,
       },
     });
   };
@@ -192,13 +190,19 @@ const CheckoutDelivery = () => {
               </SectionHeader>
 
               <ListOptions>
-                {SHIPPING_OPTIONS.map((opt) => (
+                {!selectedAddress && (
+                  <p style={{ margin: 0, color: "var(--secondary)", fontSize: 14 }}>
+                    Selecione um endereço para calcular o frete pelo CEP.
+                  </p>
+                )}
+                {shippingOptions.map((opt) => (
                   <OptionLabel key={opt.id}>
                     <input
                       type="radio"
                       name="shipping"
                       checked={shipping === opt.id}
                       onChange={() => setShipping(opt.id)}
+                      disabled={!selectedAddress}
                     />
                     <OptionCard $active={shipping === opt.id} style={{ padding: "16px" }}>
                       <OptionRow>

@@ -9,7 +9,6 @@ import {
   FiAlertCircle,
 } from 'react-icons/fi';
 import { HiOutlineWrenchScrewdriver } from 'react-icons/hi2';
-import { BsBuildings, BsGoogle } from 'react-icons/bs';
 import { supabase } from '../../lib/supabaseClient';
 import {
   PageWrapper,
@@ -34,9 +33,6 @@ import {
   PasswordRow,
   ForgotLink,
   SubmitButton,
-  Divider,
-  AltButtons,
-  AltButton,
   FormFooter,
   AlertMessage,
 } from './style';
@@ -65,18 +61,6 @@ const Login = () => {
       setAlert({ type: 'error', message: error.message });
     } else {
       navigate('/');
-    }
-  };
-
-  const handleGoogle = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: appUrl },
-    });
-    if (error) {
-      setLoading(false);
-      setAlert({ type: 'error', message: error.message });
     }
   };
 
@@ -197,19 +181,6 @@ const Login = () => {
             {!loading && <FiArrowRight />}
           </SubmitButton>
         </form>
-
-        <Divider>ou acesse via</Divider>
-
-        <AltButtons>
-          <AltButton id="btn-sso" type="button" disabled={loading}>
-            <BsBuildings />
-            Single Sign-On (SSO)
-          </AltButton>
-          <AltButton id="btn-google" type="button" onClick={handleGoogle} disabled={loading}>
-            <BsGoogle />
-            Conta Pessoal (Google)
-          </AltButton>
-        </AltButtons>
 
         <FormFooter>
           Não possui cadastro?{' '}

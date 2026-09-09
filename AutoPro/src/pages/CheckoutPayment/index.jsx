@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { supabase } from "../../lib/supabaseClient";
@@ -40,19 +40,43 @@ import {
 const fmt = (v) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+const createDemoPixQr = (amount) => {
+  const size = 29;
+  const seed = `AUTOPRO-DEMO-${amount.toFixed(2)}`;
+  let state = [...seed].reduce((total, char) => total + char.charCodeAt(0), 0) || 1;
+  const next = () => {
+    state = (state * 1103515245 + 12345) & 0x7fffffff;
+    return state % 2;
+  };
+  const finder = (row, col, top, left) => {
+    const y = row - top;
+    const x = col - left;
+    return y >= 0 && y < 7 && x >= 0 && x < 7 && (y === 0 || y === 6 || x === 0 || x === 6 || (y >= 2 && y <= 4 && x >= 2 && x <= 4));
+  };
+  const cells = [];
+  for (let row = 0; row < size; row += 1) {
+    for (let col = 0; col < size; col += 1) {
+      const isFinder = finder(row, col, 0, 0) || finder(row, col, 0, size - 7) || finder(row, col, size - 7, 0);
+      if (isFinder || next()) cells.push(<rect key={`${row}-${col}`} x={col} y={row} width="1" height="1" fill="#111827" />);
+    }
+  }
+  return <svg viewBox={`0 0 ${size} ${size}`} width="152" height="152" role="img" aria-label="QR Code PIX de demonstração">{cells}</svg>;
+};
+
 const CheckoutPayment = () => {
   const navigate = useNavigate();
   const location  = useLocation();
 
   // Dados passados pela tela de Delivery via router state
   const {
-    shippingPrice:    shippingFromDelivery = 45.90,
-    shippingLabel:    shippingLabelFromDelivery = "Expressa (Sedex)",
+    shippingPrice:    shippingFromDelivery = 0,
+    shippingLabel:    shippingLabelFromDelivery = "Não calculado",
     addressSnapshot:  addressFromDelivery = null,
   } = location.state || {};
 
   const { cartItems, cartCount, cartTotal, clearCart, session } = useCart();
-  const [method, setMethod]         = useState(1); // 1 = Cartão, 2 = PIX
+  const [method, setMethod]         = useState(null); // 1 = Cartão, 2 = PIX
+  const [card, setCard]             = useState({ number: "", holder: "", expiry: "", cvv: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess]   = useState(false);
   const [errorMsg, setErrorMsg]         = useState("");
@@ -61,6 +85,9 @@ const CheckoutPayment = () => {
   const baseTotal     = cartTotal + shippingPrice;
   const pixDiscount   = method === 2 ? baseTotal * 0.05 : 0;
   const finalTotal    = baseTotal - pixDiscount;
+  const pixQrCode = useMemo(() => createDemoPixQr(finalTotal), [finalTotal]);
+  const cardComplete = Object.values(card).every((value) => value.trim());
+  const paymentComplete = method === 2 || (method === 1 && cardComplete);
 
   const handleSubmit = async () => {
     if (!session) {
@@ -68,6 +95,12 @@ const CheckoutPayment = () => {
       return;
     }
     if (cartItems.length === 0) return;
+    if (!paymentComplete) {
+      setErrorMsg(method === 1
+        ? "Preencha todos os dados do cartão para finalizar a compra."
+        : "Selecione uma forma de pagamento para finalizar a compra.");
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMsg("");
@@ -134,20 +167,20 @@ const CheckoutPayment = () => {
                     <PaymentBody>
                       <InputGroup>
                         <label>Número do Cartão</label>
-                        <input type="text" placeholder="0000 0000 0000 0000" />
+                        <input type="text" placeholder="0000 0000 0000 0000" value={card.number} onChange={(event) => setCard({ ...card, number: event.target.value })} />
                       </InputGroup>
                       <InputGroup>
                         <label>Nome do Titular</label>
-                        <input type="text" placeholder="Como impresso no cartão" />
+                        <input type="text" placeholder="Como impresso no cartão" value={card.holder} onChange={(event) => setCard({ ...card, holder: event.target.value })} />
                       </InputGroup>
                       <InputRow>
                         <InputGroup>
                           <label>Validade</label>
-                          <input type="text" placeholder="MM/AA" />
+                          <input type="text" placeholder="MM/AA" value={card.expiry} onChange={(event) => setCard({ ...card, expiry: event.target.value })} />
                         </InputGroup>
                         <InputGroup>
                           <label>CVV</label>
-                          <input type="text" placeholder="123" />
+                          <input type="text" placeholder="123" value={card.cvv} onChange={(event) => setCard({ ...card, cvv: event.target.value })} />
                         </InputGroup>
                       </InputRow>
                     </PaymentBody>
@@ -167,12 +200,10 @@ const CheckoutPayment = () => {
                   {method === 2 && (
                     <PaymentBody>
                       <PixBox>
-                        <div className="qr-placeholder">
-                          <span className="material-symbols-outlined" style={{ fontSize: 48, color: "var(--surface-variant)" }}>qr_code_2</span>
-                        </div>
+                        <div className="qr-placeholder">{pixQrCode}</div>
                         <div>
-                          <p style={{ fontWeight: 600, color: "var(--on-surface)" }}>O código PIX será gerado após finalizar a compra.</p>
-                          <p>Você terá 30 minutos para pagar.</p>
+                          <p style={{ fontWeight: 600, color: "var(--on-surface)" }}>QR Code PIX de demonstração</p>
+                          <p>Escaneie o código fictício para simular o pagamento de {fmt(finalTotal)}.</p>
                         </div>
                       </PixBox>
                     </PaymentBody>
@@ -279,7 +310,7 @@ const CheckoutPayment = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
                 <PrimaryButton
                   onClick={handleSubmit}
-                  disabled={isSubmitting || cartItems.length === 0}
+                  disabled={isSubmitting || cartItems.length === 0 || !paymentComplete}
                 >
                   {isSubmitting ? "Processando..." : "Finalizar Compra"}
                   {!isSubmitting && <span className="material-symbols-outlined icon">check_circle</span>}
