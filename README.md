@@ -329,7 +329,7 @@ sequenceDiagram
 
 ## **7. Planejamento de Execução (4 Semanas)**
 
-* **Semana 1:** Setup do ambiente (React/Vite/Tailwind) e modelagem do BD (Supabase).
+* **Semana 1:** Setup do ambiente (React/Vite) e modelagem do BD (Supabase).
 * **Semana 2:** Desenvolvimento da Vitrine, Busca, Categorias e Autenticação.
 * **Semana 3:** Implementação do estado global (Context API), Lógica de Carrinho e Checkout Simulado.
 * **Semana 4:** Construção do Painel Administrativo (CRUD), testes de RLS, polimento e deploy na Vercel.
